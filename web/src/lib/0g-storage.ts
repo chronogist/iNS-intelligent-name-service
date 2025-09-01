@@ -1,6 +1,5 @@
 import { ZgFile, Indexer, Batcher, KvClient } from '@0glabs/0g-ts-sdk';
 import { ethers } from 'ethers';
-import { promises as fs } from 'fs';
 
 // Import UploadResult from browser service for type consistency
 export interface UploadResult {
@@ -89,19 +88,12 @@ export class OGStorageService {
         metadataHash: encryptedData.hash
       };
 
-      // Convert to JSON and create file
+      // Convert to JSON and create Blob
       const metadataJson = JSON.stringify(encryptedMetadata);
+      const metadataBlob = new Blob([metadataJson], { type: 'application/json' });
       
-      // Create temporary file path
-      const tempPath = `/tmp/${name}.0g-metadata.json`;
-      
-      // Write metadata to temporary file
-      await fs.writeFile(tempPath, metadataJson);
-      
-      // Open file handle and create ZgFile
-      const fileHandle = await fs.open(tempPath, 'r');
-      const stats = await fs.stat(tempPath);
-      const file = new ZgFile(fileHandle, stats.size);
+      // Create ZgFile from Blob
+      const file = new ZgFile(metadataBlob as any, metadataBlob.size);
       
       // Generate Merkle tree for verification
       const [tree, treeErr] = await file.merkleTree();
@@ -117,9 +109,6 @@ export class OGStorageService {
 
       // Create 0G Storage URI
       const encryptedURI = `og://storage/${tree?.rootHash()}`;
-
-      // Close file
-      await file.close();
 
       return {
         encryptedURI,
@@ -277,16 +266,8 @@ export class OGStorageService {
     }
 
     try {
-      // Convert File to temporary file for server-side processing
-      const tempPath = `/tmp/${name}-avatar.${imageFile.name.split('.').pop()}`;
-      const arrayBuffer = await imageFile.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      await fs.writeFile(tempPath, buffer);
-      
-      // Open file handle and create ZgFile
-      const fileHandle = await fs.open(tempPath, 'r');
-      const stats = await fs.stat(tempPath);
-      const file = new ZgFile(fileHandle, stats.size);
+      // Create ZgFile directly from File object
+      const file = new ZgFile(imageFile as any, imageFile.size);
       
       // Generate Merkle tree
       const [tree, treeErr] = await file.merkleTree();
@@ -302,9 +283,6 @@ export class OGStorageService {
 
       // Create avatar URI
       const avatarURI = `og://storage/${tree?.rootHash()}`;
-
-      // Close file
-      await file.close();
 
       return {
         avatarURI,

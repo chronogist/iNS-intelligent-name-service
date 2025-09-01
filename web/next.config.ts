@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+  // Fix for Vercel deployment
+  outputFileTracingRoot: process.cwd(),
+  // Ensure proper static export if needed
+  trailingSlash: false,
 };
 
 export default nextConfig;
