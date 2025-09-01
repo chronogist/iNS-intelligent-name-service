@@ -14,7 +14,7 @@ export default function NetworkSwitcher() {
 
     try {
       setStatus('Checking network...');
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' }) as string;
       const networkName = getNetworkName(chainId);
       setCurrentNetwork(`${networkName} (${chainId})`);
       setStatus('Network checked');
