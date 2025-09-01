@@ -1,5 +1,6 @@
 import { ZgFile, Indexer, Batcher, KvClient } from '@0glabs/0g-ts-sdk';
 import { ethers } from 'ethers';
+import { promises as fs } from 'fs';
 
 // 0G Storage Configuration
 const OG_CONFIG = {
@@ -92,7 +93,6 @@ export class OGStorageService {
       const tempPath = `/tmp/${name}.0g-metadata.json`;
       
       // Write metadata to temporary file
-      const fs = require('fs').promises;
       await fs.writeFile(tempPath, metadataJson);
       
       // Create ZgFile from file path
