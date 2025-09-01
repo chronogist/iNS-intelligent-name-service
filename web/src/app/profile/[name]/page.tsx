@@ -15,7 +15,6 @@ import {
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { blockchainService } from '@/lib/blockchain';
-import { ethers } from 'ethers';
 
 interface ProfilePageProps {
   params: Promise<{
@@ -107,7 +106,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
           tokenId: tokenId,
           owner: availability.owner || 'Unknown',
           registrationDate: new Date().toISOString(), // Fallback to current date
-          transactionHash: metadataState?.transactionHash || '0x0000000000000000000000000000000000000000000000000000000000000000'
+          transactionHash: '0x0000000000000000000000000000000000000000000000000000000000000000' // Default value
         };
         
         setProfileData(profileData);
