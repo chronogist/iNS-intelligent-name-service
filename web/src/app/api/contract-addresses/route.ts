@@ -11,15 +11,16 @@ export async function GET() {
     
     return NextResponse.json(addresses);
   } catch (error) {
-    console.warn('Could not load contract addresses:', error);
+    console.warn('Could not load contract addresses from file, using deployed addresses:', error);
     
-    // Return default addresses for development
+    // Return the actual deployed contract addresses on 0G testnet
     return NextResponse.json({
-      registry: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
-      registrar: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
-      resolver: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
-      reverse: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
-      baseNode: '0x0000000000000000000000000000000000000000000000000000000000000000'
+      registry: '0xe8Eb3bA53B8d5aC878e61d499a04E86813e78E36',
+      registrar: '0xe5E1d3eB7d39390Cc410Ed978CC413d3E4ED14c5',
+      resolver: '0xb2C192888260a308010572026A4f22EF5D66C1f7',
+      reverse: '0xc30c205aF6E1209a53f2B79ee81C188160868510',
+      baseNode: '0xf5bfbd4d6c89254c654082d9ae0c16653464cdd568f20f4b78240f545f1de8cc',
+      intelligentOracle: '0x622f07BC29bffFE482E5E9D40f37321514b0Bc13'
     });
   }
 }

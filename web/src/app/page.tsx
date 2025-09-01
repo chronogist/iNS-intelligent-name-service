@@ -490,15 +490,46 @@ export default function Home() {
               transition={{ delay: 0.15, duration: 0.8 }}
               className="max-w-4xl mx-auto mb-8"
             >
-              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <AlertCircle className="w-5 h-5 text-yellow-600" />
-                  <span className="font-semibold text-yellow-800">Contracts Not Deployed</span>
-                </div>
-                <p className="text-yellow-700 text-sm">
-                  The smart contracts are not deployed on this network. Please deploy the contracts first or switch to a network where they are deployed.
-                </p>
+                          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <AlertCircle className="w-6 h-6 text-yellow-600" />
+                <span className="font-semibold text-yellow-800 text-lg">Smart Contracts Not Found</span>
               </div>
+              <p className="text-yellow-700 text-sm mb-4">
+                The iNS smart contracts are deployed on the 0G testnet (Galileo). Please switch to the correct network to use this dApp.
+              </p>
+              
+              <div className="bg-white border border-yellow-300 rounded-lg p-4 mb-4">
+                <h4 className="font-semibold text-yellow-800 mb-2">Quick Fix:</h4>
+                <div className="text-sm text-yellow-700 space-y-2">
+                  <p>1. <strong>Add 0G Testnet to MetaMask:</strong></p>
+                  <div className="bg-gray-100 p-3 rounded text-left font-mono text-xs">
+                    <p><strong>Network Name:</strong> 0G Testnet (Galileo)</p>
+                    <p><strong>Chain ID:</strong> 16601</p>
+                    <p><strong>RPC URL:</strong> https://evmrpc-testnet.0g.ai/</p>
+                    <p><strong>Currency Symbol:</strong> 0G</p>
+                    <p><strong>Block Explorer:</strong> https://testnet.0g.ai/</p>
+                  </div>
+                  <p>2. <strong>Switch to 0G Testnet</strong></p>
+                  <p>3. <strong>Refresh this page</strong></p>
+                </div>
+              </div>
+              
+              <div className="flex justify-center gap-3">
+                <button
+                  onClick={() => window.open('https://testnet.0g.ai/', '_blank')}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  🌐 Visit 0G Testnet
+                </button>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                >
+                  🔄 Refresh Page
+                </button>
+              </div>
+            </div>
             </motion.div>
           )}
         </div>
