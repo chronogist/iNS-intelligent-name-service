@@ -1340,7 +1340,7 @@ export class BlockchainService {
     }
   }
 
-  async trackOwnerActivity(ownerAddress: string, activityType: 'social' | 'transaction' | 'interaction' | 'location'): Promise<void> {
+  async trackOwnerActivity(ownerAddress: string, activityType: 'social' | 'transaction' | 'interaction' | 'location' | 'achievement'): Promise<void> {
     if (!this.registrar) {
       throw new Error('Blockchain service not initialized');
     }
