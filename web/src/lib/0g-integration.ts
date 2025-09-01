@@ -359,7 +359,7 @@ export class OGIntegrationService {
 
   private async encryptMetadata(data: string, key: Uint8Array): Promise<string> {
     // In production, this would use proper encryption
-    return ethers.base64Encode(ethers.toUtf8Bytes(data));
+    return btoa(data);
   }
 
   private async storeOnOGStorage(data: string): Promise<string> {
@@ -369,7 +369,7 @@ export class OGIntegrationService {
 
   private async sealKey(key: Uint8Array, publicKey: string): Promise<string> {
     // In production, this would use proper key sealing
-    return ethers.base64Encode(key);
+    return btoa(String.fromCharCode(...key));
   }
 
   private async decryptInferenceResult(resultHash: string): Promise<any> {
