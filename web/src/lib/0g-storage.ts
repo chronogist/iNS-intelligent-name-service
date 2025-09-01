@@ -107,7 +107,7 @@ export class OGStorageService {
       }
 
       // Upload to 0G Storage
-      const [tx, uploadErr] = await this.indexer.upload(file, OG_CONFIG.RPC_URL, this.signer);
+      const [tx, uploadErr] = await this.indexer.upload(file, OG_CONFIG.RPC_URL, this.signer as any);
       if (uploadErr !== null) {
         throw new Error(`Upload error: ${uploadErr}`);
       }
@@ -289,7 +289,7 @@ export class OGStorageService {
       }
 
       // Upload to 0G Storage
-      const [tx, uploadErr] = await this.indexer.upload(file, OG_CONFIG.RPC_URL, this.signer);
+      const [tx, uploadErr] = await this.indexer.upload(file, OG_CONFIG.RPC_URL, this.signer as any);
       if (uploadErr !== null) {
         throw new Error(`Upload error: ${uploadErr}`);
       }
