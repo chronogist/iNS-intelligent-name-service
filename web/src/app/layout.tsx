@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: "iNS — Identity Name Service",
   description:
     "Replace complex 0x address with name that grow with you. Intelligent NFTs for evolving digital identities.",
-  metadataBase: new URL("https://ins.local"),
+
   openGraph: {
     title: "iNS — Identity Name Service",
     description:
