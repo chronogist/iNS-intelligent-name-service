@@ -122,7 +122,7 @@ export class OGStorageService {
         encryptedURI,
         metadataHash: encryptedData.hash,
         rootHash: tree?.rootHash() || '',
-        txHash: tx
+        txHash: tx || ''
       };
     } catch (error) {
       console.error('Error uploading name metadata:', error);
@@ -303,7 +303,7 @@ export class OGStorageService {
       return {
         avatarURI,
         rootHash: tree?.rootHash() || '',
-        txHash: tx
+        txHash: tx || ''
       };
     } catch (error) {
       console.error('Error uploading avatar:', error);
