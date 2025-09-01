@@ -97,7 +97,8 @@ export class OGStorageService {
       
       // Open file handle and create ZgFile
       const fileHandle = await fs.open(tempPath, 'r');
-      const file = new ZgFile(fileHandle, `${name}.0g-metadata.json`);
+      const stats = await fs.stat(tempPath);
+      const file = new ZgFile(fileHandle, stats.size);
       
       // Generate Merkle tree for verification
       const [tree, treeErr] = await file.merkleTree();
