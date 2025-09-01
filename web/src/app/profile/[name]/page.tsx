@@ -71,10 +71,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
       }
       
       // Get token ID from name
-      const labelHash = ethers.keccak256(ethers.toUtf8Bytes(name));
-      const node = ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['bytes32', 'bytes32'], ['0x0000000000000000000000000000000000000000000000000000000000000000', labelHash]));
-      const tokenId = await blockchainService.registrar!.nodeToTokenId(node);
-      console.log('🆔 Token ID for name:', name, 'is:', tokenId.toString());
+      const tokenId = await blockchainService.getNameToTokenId(name);
+      if (!tokenId) {
+        setError('Could not resolve token ID for this name');
+        setLoading(false);
+        return;
+      }
+      console.log('🆔 Token ID for name:', name, 'is:', tokenId);
       
       // Try to get registration events to find the registration details
       let registrationEvent = null;
@@ -101,7 +104,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
         
         const profileData: ProfileData = {
           name: name,
-          tokenId: tokenId.toString(),
+          tokenId: tokenId,
           owner: availability.owner || 'Unknown',
           registrationDate: new Date().toISOString(), // Fallback to current date
           transactionHash: metadataState?.transactionHash || '0x0000000000000000000000000000000000000000000000000000000000000000'
@@ -115,7 +118,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
       // Use the found registration event
       const profileData: ProfileData = {
         name: name,
-        tokenId: tokenId.toString(),
+        tokenId: tokenId,
         owner: availability.owner || registrationEvent.buyer,
         registrationDate: registrationEvent.timestamp,
         transactionHash: registrationEvent.hash

@@ -1592,6 +1592,23 @@ export class BlockchainService {
   getRegistrarAddress(): string | null {
     return this.addresses?.registrar || null;
   }
+
+  // Convert name to token ID
+  async getNameToTokenId(name: string): Promise<string | null> {
+    if (!this.registrar) {
+      return null;
+    }
+
+    try {
+      const labelHash = ethers.keccak256(ethers.toUtf8Bytes(name));
+      const node = ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['bytes32', 'bytes32'], ['0x0000000000000000000000000000000000000000000000000000000000000000', labelHash]));
+      const tokenId = await this.registrar.nodeToTokenId(node);
+      return tokenId.toString();
+    } catch (error) {
+      console.warn(`Could not get token ID for name ${name}:`, error);
+      return null;
+    }
+  }
 }
 
 // Global instance
