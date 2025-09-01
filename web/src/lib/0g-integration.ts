@@ -338,9 +338,10 @@ export class OGIntegrationService {
         events.map(async (event) => {
           const block = await this.provider!.getBlock(event.blockNumber);
           
+          const eventLog = event as ethers.EventLog;
           return {
-            executor: event.args?.[1] || '',
-            resultHash: event.args?.[2] || '',
+            executor: eventLog.args?.[1] || '',
+            resultHash: eventLog.args?.[2] || '',
             timestamp: block ? new Date(Number(block.timestamp) * 1000).toISOString() : new Date().toISOString(),
             blockNumber: event.blockNumber
           };
