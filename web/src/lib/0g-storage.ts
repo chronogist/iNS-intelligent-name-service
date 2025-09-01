@@ -2,6 +2,14 @@ import { ZgFile, Indexer, Batcher, KvClient } from '@0glabs/0g-ts-sdk';
 import { ethers } from 'ethers';
 import { promises as fs } from 'fs';
 
+// Import UploadResult from browser service for type consistency
+export interface UploadResult {
+  encryptedURI: string;
+  metadataHash: string;
+  rootHash: string;
+  txHash: string;
+}
+
 // 0G Storage Configuration
 const OG_CONFIG = {
   RPC_URL: process.env.NEXT_PUBLIC_OG_RPC_URL || 'https://evmrpc-testnet.0g.ai/',
@@ -65,12 +73,7 @@ export class OGStorageService {
     name: string,
     metadata: NameMetadata,
     encryptionKey: Uint8Array
-  ): Promise<{
-    encryptedURI: string;
-    metadataHash: string;
-    rootHash: string;
-    txHash: string;
-  }> {
+  ): Promise<UploadResult> {
     if (!this.indexer || !this.signer) {
       throw new Error('0G Storage service not initialized');
     }
@@ -175,12 +178,7 @@ export class OGStorageService {
     currentMetadata: NameMetadata,
     updates: Partial<NameMetadata>,
     encryptionKey: Uint8Array
-  ): Promise<{
-    encryptedURI: string;
-    metadataHash: string;
-    rootHash: string;
-    txHash: string;
-  }> {
+  ): Promise<UploadResult> {
     // Merge current metadata with updates
     const updatedMetadata: NameMetadata = {
       ...currentMetadata,
