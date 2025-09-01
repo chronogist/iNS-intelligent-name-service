@@ -34,8 +34,8 @@ export default function Home() {
   const [devMode, setDevMode] = useState(false);
   const [debugInfo, setDebugInfo] = useState<{
     contractsDeployed: boolean | null;
-    contractTest: any;
-    networkInfo: any;
+    contractTest: unknown;
+    networkInfo: unknown;
   }>({
     contractsDeployed: null,
     contractTest: null,
@@ -553,7 +553,7 @@ export default function Home() {
                     className="flex justify-start"
                   >
                     <div className="bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-bl-md max-w-xs">
-                      <p className="text-sm">What's your crypto address so I can pay you?</p>
+                      <p className="text-sm">What&apos;s your crypto address so I can pay you?</p>
                     </div>
                   </motion.div>
 

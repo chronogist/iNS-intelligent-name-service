@@ -206,9 +206,9 @@ export default function MyProfilePage() {
               <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-600 p-8 rounded-2xl mb-8">
                 <User className="w-16 h-16 text-blue-500 dark:text-blue-400 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No Names Yet</h2>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  You haven't registered any names yet. Register your first name to get started!
-                </p>
+                                  <p className="text-gray-600 dark:text-gray-300 mb-6">
+                    You haven&apos;t registered any names yet. Register your first name to get started!
+                  </p>
               </div>
 
               <div className="space-y-6">
@@ -264,7 +264,7 @@ export default function MyProfilePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">Your Names</h2>
-                  <p className="text-gray-600 dark:text-gray-400">You own {userNFTs.length} name{userNFTs.length !== 1 ? 's' : ''}</p>
+                  <p className="text-gray-600 dark:text-gray-400">You own {userNFTs.length} name{userNFTs.length !== 1 ? &apos;s&apos; : &apos;&apos;}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-gray-500 dark:text-gray-400">Total Value</p>
