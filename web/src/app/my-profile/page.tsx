@@ -4,9 +4,9 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { blockchainService } from '@/lib/blockchain';
-import { User, Crown, AlertCircle, ExternalLink, Calendar, Coins, Hash, Bug } from 'lucide-react';
+import { User, Crown, AlertCircle, ExternalLink, Calendar, Coins, Hash } from 'lucide-react';
 import { ethers } from 'ethers';
-import testNFTRetrieval from '@/lib/test-nft-retrieval';
+
 
 
 interface UserNFT {
@@ -104,22 +104,7 @@ export default function MyProfilePage() {
     }
   };
 
-  const testNFTRetrieval = async () => {
-    try {
-      console.log('🧪 Testing NFT retrieval...');
-      const result = await testNFTRetrieval();
-      console.log('🧪 Test result:', result);
-      
-      if (result.success) {
-        alert(`Test completed! Found ${result.totalTokensFound} tokens on the blockchain. Check console for details.`);
-      } else {
-        alert(`Test failed: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Test error:', error);
-      alert(`Test error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
+
 
   const checkContractStatus = async () => {
     try {
@@ -238,13 +223,7 @@ export default function MyProfilePage() {
               >
                 🔄 Refresh
               </button>
-              <button
-                onClick={testNFTRetrieval}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm text-gray-600 dark:text-gray-300"
-                title="Test NFT Retrieval"
-              >
-                <Bug className="w-4 h-4" />
-              </button>
+
               <button
                 onClick={checkContractStatus}
                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm text-gray-600 dark:text-gray-300"
@@ -292,10 +271,9 @@ export default function MyProfilePage() {
                   <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl p-4 mb-6">
                     <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Debug Info</h3>
                     <div className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
-                      <p>Address: {userAddress}</p>
-                      <p>Contracts: {userAddress ? 'Deployed' : 'Not accessible'}</p>
-                      <p>Click the 🐛 button to test blockchain connection</p>
-                      <p>Click the 📊 button to check if contract has any NFTs</p>
+                                          <p>Address: {userAddress}</p>
+                    <p>Contracts: {userAddress ? 'Deployed' : 'Not accessible'}</p>
+                    <p>Click the 📊 button to check if contract has any NFTs</p>
                     </div>
                   </div>
                 )}
