@@ -944,6 +944,64 @@ export class BlockchainService {
     }
   }
 
+  /**
+   * Get registration event for a specific token ID
+   */
+  async getRegistrationEventForToken(tokenId: string): Promise<{
+    hash: string;
+    name: string;
+    price: bigint;
+    buyer: string;
+    timestamp: string;
+    blockNumber: number;
+  } | null> {
+    if (!this.registrar || !this.provider) {
+      throw new Error('Blockchain service not initialized');
+    }
+
+    try {
+      console.log(`🔍 Searching for registration event for token ID: ${tokenId}`);
+      
+      // Get all registration events
+      const events = await this.getRegistrationEvents();
+      
+      // Try to match by token ID using the raw event data
+      for (const event of events) {
+        try {
+          // Get the raw event from the blockchain to access topics
+          const rawEvents = await this.registrar.queryFilter(
+            this.registrar.filters.NameRegistered(),
+            event.blockNumber,
+            event.blockNumber
+          );
+          
+          // Find the raw event that matches our processed event
+          const rawEvent = rawEvents.find(raw => raw.transactionHash === event.hash);
+          
+          if (rawEvent && rawEvent.topics && rawEvent.topics.length >= 2) {
+            // The tokenId is the second indexed parameter
+            const eventTokenId = parseInt(rawEvent.topics[2], 16);
+            
+            if (eventTokenId.toString() === tokenId) {
+              console.log(`✅ Found matching event for token ID ${tokenId}:`, event);
+              return event;
+            }
+          }
+        } catch (eventError) {
+          console.warn('Error processing raw event:', eventError);
+          continue;
+        }
+      }
+      
+      console.log(`❌ No registration event found for token ID: ${tokenId}`);
+      return null;
+      
+    } catch (error) {
+      console.error('Error getting registration event for token:', error);
+      return null;
+    }
+  }
+
   // ERC7857 Dynamism Methods
 
   async getMetadataHash(tokenId: string): Promise<string> {

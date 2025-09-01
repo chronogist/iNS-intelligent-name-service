@@ -84,26 +84,41 @@ export default function NFTDetailsPage({ params }: NFTDetailsPageProps) {
       const currentState = await blockchainService.getCurrentMetadataState(tokenId);
       console.log('📊 Current metadata state:', currentState);
       
-      // Try to resolve the name from token ID by checking all possible names
-      let resolvedName = null;
+      // Get network info for the contract address
+      const networkInfoData = await blockchainService.getNetworkInfo();
+      setNetworkInfo(networkInfoData);
+      
+      // Get the actual contract address
+      let contractAddressData = '0x0000000000000000000000000000000000000000';
       try {
-        // Get registration events to find the name for this token ID
-        const events = await blockchainService.getRegistrationEvents();
-        console.log('📋 Found registration events:', events.length);
-        
-        // Look for an event that matches this token ID
-        const registrationEvent = events.find(event => {
-          // Since we can't access the private registrar property, we'll skip token ID matching
-          // The name will be resolved from token URI or fallback instead
-          return false;
-        });
+        const registrarAddress = blockchainService.getRegistrarAddress();
+        if (registrarAddress) {
+          contractAddressData = registrarAddress;
+          console.log('✅ Contract address:', contractAddressData);
+          setContractAddress(contractAddressData);
+        }
+      } catch (error) {
+        console.warn('Could not get contract address:', error);
+      }
+      
+      // Try to get registration details from events FIRST
+      let resolvedName = null;
+      let registrationDate = new Date().toISOString();
+      let transactionHash = '0x0000000000000000000000000000000000000000000000000000000000000000';
+      
+      try {
+        console.log('🔍 Searching for registration event for token ID:', tokenId);
+        const registrationEvent = await blockchainService.getRegistrationEventForToken(tokenId);
         
         if (registrationEvent) {
+          console.log('✅ Found registration event for token ID:', tokenId);
           resolvedName = registrationEvent.name;
-          console.log('✅ Found name for token ID:', resolvedName);
+          registrationDate = registrationEvent.timestamp;
+          transactionHash = registrationEvent.hash;
+          console.log('✅ Registration details:', { name: resolvedName, date: registrationDate, hash: transactionHash });
         }
       } catch (eventError) {
-        console.warn('Could not load registration events:', eventError);
+        console.warn('Could not load registration event:', eventError);
       }
       
       // If we couldn't resolve the name from events, try to get it from the token URI
@@ -130,23 +145,6 @@ export default function NFTDetailsPage({ params }: NFTDetailsPageProps) {
         console.log('⚠️ Using fallback name:', resolvedName);
       }
       
-      // Get network info for the contract address
-      const networkInfoData = await blockchainService.getNetworkInfo();
-      setNetworkInfo(networkInfoData);
-      
-      // Get the actual contract address
-      let contractAddressData = '0x0000000000000000000000000000000000000000';
-      try {
-        const registrarAddress = blockchainService.getRegistrarAddress();
-        if (registrarAddress) {
-          contractAddressData = registrarAddress;
-          console.log('✅ Contract address:', contractAddressData);
-          setContractAddress(contractAddressData);
-        }
-      } catch (error) {
-        console.warn('Could not get contract address:', error);
-      }
-      
       // Create a better image URL that doesn't rely on external API
       const imageUrl = `data:image/svg+xml;base64,${btoa(`
         <svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
@@ -167,34 +165,21 @@ export default function NFTDetailsPage({ params }: NFTDetailsPageProps) {
         tokenId: tokenId,
         name: resolvedName,
         owner: currentState.owner,
-        registrationDate: new Date().toISOString(), // We'll try to get this from events later
-        transactionHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // We'll try to get this from events later
+        registrationDate: registrationDate,
+        transactionHash: transactionHash,
         imageUrl: imageUrl,
-        contractAddress: contractAddress,
+        contractAddress: contractAddressData,
         attributes: [
           { trait_type: "TLD", value: "0g" },
           { trait_type: "Token ID", value: tokenId },
           { trait_type: "Metadata Hash", value: currentState.metadataHash.slice(0, 10) + '...' },
-          { trait_type: "Registration Date", value: new Date().toLocaleDateString() },
+          { trait_type: "Registration Date", value: new Date(registrationDate).toLocaleDateString() },
           { trait_type: "Network", value: networkInfoData?.name || 'Unknown' },
           { trait_type: "Owner", value: shortenAddress(currentState.owner) }
         ]
       };
       
-      // Try to get registration details from events
-      try {
-        const events = await blockchainService.getRegistrationEvents();
-        const registrationEvent = events.find(event => event.name === resolvedName);
-        
-        if (registrationEvent) {
-          nftData.registrationDate = registrationEvent.timestamp;
-          nftData.transactionHash = registrationEvent.hash;
-          console.log('✅ Found registration details:', registrationEvent);
-        }
-      } catch (eventError) {
-        console.warn('Could not get registration details:', eventError);
-      }
-      
+      console.log('✅ Final NFT data:', nftData);
       setNftData(nftData);
       setError(null);
     } catch (err) {
