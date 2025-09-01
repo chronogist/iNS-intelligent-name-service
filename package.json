@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "hardhat compile",
+    "build": "cd web && npm install && npm run build",
+    "dev": "cd web && npm run dev",
     "deploy": "hardhat run scripts/deploy.ts --network localhost",
     "deploy:og": "hardhat run scripts/deploy.ts --network og",
     "demo": "hardhat run scripts/demo.ts --network localhost"
