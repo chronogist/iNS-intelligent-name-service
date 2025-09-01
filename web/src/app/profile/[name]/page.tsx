@@ -353,6 +353,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   <Share2 className="size-4" />
                   {copiedField === 'link' ? 'Link Copied!' : 'Share Profile'}
                 </button>
+                <button
+                  onClick={() => window.open(`https://chainscan-galileo.0g.ai/address/${profileData.owner}?tab=nft-asset`, '_blank')}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 transition-all duration-200"
+                >
+                  <ExternalLink className="size-4" />
+                  View Names on 0G Scan
+                </button>
               </div>
             </motion.div>
 

@@ -48,6 +48,104 @@ export class BlockchainService {
   private registry: ethers.Contract | null = null;
   private registrar: ethers.Contract | null = null;
   private addresses: ContractAddresses | null = null;
+  
+  // Multiple RPC endpoints for fallback
+  private readonly RPC_ENDPOINTS = [
+    'https://evmrpc-testnet.0g.ai/',
+    'https://rpc-testnet.0g.ai/',
+    'https://testnet-rpc.0g.ai/'
+  ];
+
+  private async createProviderWithFallback(): Promise<ethers.JsonRpcProvider> {
+    for (const endpoint of this.RPC_ENDPOINTS) {
+      try {
+        console.log(`🔄 Trying RPC endpoint: ${endpoint}`);
+        const provider = new ethers.JsonRpcProvider(endpoint);
+        
+        // Test the endpoint with a simple call
+        await provider.getBlockNumber();
+        console.log(`✅ RPC endpoint working: ${endpoint}`);
+        return provider;
+      } catch (error) {
+        console.warn(`❌ RPC endpoint failed: ${endpoint}`, error);
+        continue;
+      }
+    }
+    
+    // If all endpoints fail, throw an error
+    throw new Error('All 0G testnet RPC endpoints are currently unavailable. Please try again later.');
+  }
+
+  private async delayForRateLimit(): Promise<void> {
+    // Add a small delay to respect rate limits
+    const delay = Math.random() * 100 + 50; // Random delay between 50-150ms
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+
+  /**
+   * Test RPC connection and get basic blockchain info
+   */
+  async testRPCConnection(): Promise<{
+    connected: boolean;
+    currentBlock: number;
+    endpoint: string;
+    error?: string;
+  }> {
+    if (!this.provider) {
+      return { connected: false, currentBlock: 0, endpoint: 'none', error: 'Provider not initialized' };
+    }
+
+    try {
+      const currentBlock = await this.provider.getBlockNumber();
+      const endpoint = (this.provider as any).connection?.url || 'unknown';
+      
+      return {
+        connected: true,
+        currentBlock: Number(currentBlock),
+        endpoint
+      };
+    } catch (error: any) {
+      return {
+        connected: false,
+        currentBlock: 0,
+        endpoint: 'unknown',
+        error: error.message
+      };
+    }
+  }
+
+  private async retryWithBackoff<T>(
+    operation: () => Promise<T>, 
+    maxRetries: number = 3,
+    baseDelay: number = 1000
+  ): Promise<T> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await operation();
+      } catch (error: any) {
+        if (attempt === maxRetries) {
+          throw error;
+        }
+        
+        // Check if it's a rate limit error
+        if (error.message && (
+          error.message.includes('rate limit') || 
+          error.message.includes('Too many requests') ||
+          error.message.includes('request rate exceeded')
+        )) {
+          const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+          console.log(`Rate limited, waiting ${delay}ms before retry ${attempt + 1}/${maxRetries}`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        // For other errors, don't retry
+        throw error;
+      }
+    }
+    
+    throw new Error('Max retries exceeded');
+  }
 
   async initialize(): Promise<void> {
     if (typeof window === 'undefined') return;
@@ -68,8 +166,8 @@ export class BlockchainService {
     // Check if MetaMask is installed
     if (!window.ethereum) {
       console.warn('⚠️ MetaMask is not installed, using read-only mode');
-      // Create read-only provider for 0G testnet
-      this.provider = new ethers.JsonRpcProvider('https://evmrpc-testnet.0g.ai/');
+      // Try multiple RPC endpoints with fallback
+      this.provider = await this.createProviderWithFallback();
       
       // Initialize contracts in read-only mode
       if (this.addresses) {
@@ -788,6 +886,8 @@ export class BlockchainService {
     }
 
     try {
+      // Add rate limiting protection
+      await this.delayForRateLimit();
       // Check if the contract has the NameRegistered event
       if (!this.registrar.filters.NameRegistered) {
         console.warn('NameRegistered event not found in contract ABI, returning empty events');
@@ -803,7 +903,11 @@ export class BlockchainService {
       const toBlockNumber = toBlock || currentBlock;
       
       console.log(`Querying events from block ${fromBlockNumber} to ${toBlockNumber}`);
-      const events = await this.registrar.queryFilter(filter, fromBlockNumber, toBlockNumber);
+      const events = await this.retryWithBackoff(
+        () => this.registrar!.queryFilter(filter, fromBlockNumber, toBlockNumber),
+        3,
+        1000
+      );
       
       console.log(`Found ${events.length} NameRegistered events`);
       
@@ -962,7 +1066,81 @@ export class BlockchainService {
     try {
       console.log(`🔍 Searching for registration event for token ID: ${tokenId}`);
       
-      // Get all registration events
+      // Method 1: Try to get the specific event directly from recent blocks
+      try {
+        const currentBlock = await this.provider.getBlockNumber();
+        const fromBlock = Math.max(0, currentBlock - 10000); // Last 10k blocks
+        
+        console.log(`🔍 Querying events from block ${fromBlock} to ${currentBlock}`);
+        
+        // Query for NameRegistered events in recent blocks
+        const filter = this.registrar.filters.NameRegistered();
+        const events = await this.retryWithBackoff(
+          () => this.registrar!.queryFilter(filter, fromBlock, currentBlock),
+          3,
+          1000
+        );
+        
+        console.log(`📋 Found ${events.length} NameRegistered events`);
+        
+        // Look for events that match this token ID
+        for (const event of events) {
+          try {
+            if (event.topics && event.topics.length >= 3) {
+              // The tokenId should be in the third topic (index 2)
+              const eventTokenId = parseInt(event.topics[2], 16);
+              
+              if (eventTokenId.toString() === tokenId) {
+                console.log(`✅ Found direct match for token ID ${tokenId}`);
+                
+                // Get block info for timestamp
+                const block = await this.provider.getBlock(event.blockNumber);
+                const timestamp = block ? new Date(Number(block.timestamp) * 1000).toISOString() : new Date().toISOString();
+                
+                // Try to decode the name from the event data
+                let name = `name_${tokenId}`;
+                try {
+                  if (event.data && event.data.length > 66) {
+                    // Try to decode the name from transaction input
+                    const tx = await this.provider.getTransaction(event.transactionHash);
+                    if (tx && tx.data) {
+                      // Decode the purchase function call
+                      const purchaseFunctionSelector = '0x' + ethers.keccak256(ethers.toUtf8Bytes('purchase(string,address,uint64,string,bytes32)')).slice(2, 10);
+                      
+                      if (tx.data.startsWith(purchaseFunctionSelector)) {
+                        const encodedData = tx.data.slice(10);
+                        const offset = parseInt(encodedData.slice(0, 64), 16);
+                        const length = parseInt(encodedData.slice(64, 128), 16);
+                        const nameData = encodedData.slice(128, 128 + length * 2);
+                        name = ethers.toUtf8String('0x' + nameData);
+                      }
+                    }
+                  }
+                } catch (decodeError) {
+                  console.warn('Could not decode name, using fallback:', decodeError);
+                }
+                
+                return {
+                  hash: event.transactionHash,
+                  name: name,
+                  price: 0n, // We'll get this from the transaction
+                  buyer: event.topics[1] ? '0x' + event.topics[1].slice(26) : '', // Owner from second topic
+                  timestamp: timestamp,
+                  blockNumber: event.blockNumber
+                };
+              }
+            }
+          } catch (eventError) {
+            console.warn('Error processing event:', eventError);
+            continue;
+          }
+        }
+      } catch (directError) {
+        console.warn('Direct event query failed:', directError);
+      }
+      
+      // Method 2: Fallback to the old method if direct query fails
+      console.log('🔄 Trying fallback method...');
       const events = await this.getRegistrationEvents();
       
       // Try to match by token ID using the raw event data

@@ -215,6 +215,17 @@ export default function SuccessModal({
                       </button>
                     </div>
                   </div>
+                  
+                  {/* View on 0G Scan Button */}
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => window.open(`https://chainscan-galileo.0g.ai/tx/${transactionHash}`, '_blank')}
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    >
+                      <ExternalLink className="size-4" />
+                      View on 0G Scan
+                    </button>
+                  </div>
 
                   {/* Registration Date */}
                   <div className="flex items-center justify-between bg-gray-50 rounded-xl p-3">

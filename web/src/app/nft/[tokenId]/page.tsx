@@ -182,9 +182,25 @@ export default function NFTDetailsPage({ params }: NFTDetailsPageProps) {
       console.log('✅ Final NFT data:', nftData);
       setNftData(nftData);
       setError(null);
-    } catch (err) {
-      setError('Failed to load NFT data from blockchain');
+    } catch (err: any) {
       console.error('Error loading NFT:', err);
+      
+      // Provide more specific error messages based on the error type
+      let errorMessage = 'Failed to load NFT data from blockchain';
+      
+      if (err.message) {
+        if (err.message.includes('rate limit') || err.message.includes('Too many requests')) {
+          errorMessage = 'RPC rate limit exceeded. Please wait a moment and try again.';
+        } else if (err.message.includes('Failed to fetch') || err.message.includes('HTTP request failed')) {
+          errorMessage = 'Network connection failed. The 0G testnet may be experiencing issues.';
+        } else if (err.message.includes('Contracts not deployed')) {
+          errorMessage = 'Smart contracts not found. Please switch to 0G testnet (Chain ID: 16601).';
+        } else if (err.message.includes('All 0G testnet RPC endpoints')) {
+          errorMessage = 'All 0G testnet RPC endpoints are currently unavailable. Please try again later.';
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -272,6 +288,21 @@ export default function NFTDetailsPage({ params }: NFTDetailsPageProps) {
                 </div>
               )}
               
+              {error && (error.includes('rate limit') || error.includes('Too many requests') || error.includes('RPC')) && (
+                <div className="bg-white border border-yellow-300 rounded-lg p-6 mb-6">
+                  <h4 className="font-semibold text-yellow-800 mb-3 text-lg">RPC Rate Limiting:</h4>
+                  <div className="text-sm text-yellow-700 space-y-3">
+                    <p>The 0G testnet is experiencing high traffic. This is a temporary issue.</p>
+                    <p><strong>Solutions:</strong></p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>Wait a few seconds and try again</li>
+                      <li>Switch to a different network and back</li>
+                      <li>Refresh the page</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex justify-center gap-4">
                 <button
                   onClick={handleBack}
@@ -343,6 +374,13 @@ export default function NFTDetailsPage({ params }: NFTDetailsPageProps) {
                   >
                     <User className="size-3" />
                     View Profile
+                  </button>
+                  <button
+                    onClick={() => window.open(`https://chainscan-galileo.0g.ai/address/${nftData.owner}?tab=nft-asset`, '_blank')}
+                    className="flex-1 flex items-center justify-center gap-2 p-2 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 transition-all duration-200 text-sm"
+                  >
+                    <ExternalLink className="size-3" />
+                    View Names on 0G Scan
                   </button>
                   <button
                     onClick={() => copyToClipboard(nftData.contractAddress, 'contract')}

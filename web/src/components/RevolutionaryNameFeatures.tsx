@@ -24,112 +24,102 @@ interface NameFeature {
   title: string;
   description: string;
   icon: React.ReactNode;
-  category: 'intelligence' | 'social' | 'financial' | 'gaming' | 'business' | 'creative';
+  category: 'inft' | 'blockchain' | 'security' | 'ai' | 'storage' | 'performance';
   priority: 'core' | 'advanced' | 'premium';
-  implementation: string;
-  competitiveAdvantage: string;
+  benefit: string;
+  zeroGAdvantage: string;
 }
 
 const REVOLUTIONARY_FEATURES: NameFeature[] = [
   {
-    id: 'ai-identity',
-    title: 'AI-Powered Identity Evolution',
-    description: 'Names that learn and evolve based on user behavior, creating personalized digital identities',
-    icon: <Brain className="w-6 h-6" />,
-    category: 'intelligence',
-    priority: 'core',
-    implementation: 'Machine learning models analyze user activity, social interactions, and preferences',
-    competitiveAdvantage: 'ENS names are static - ours evolve and become more valuable over time'
-  },
-  {
-    id: 'multi-resolution',
-    title: 'Multi-Dimensional Resolution',
-    description: 'Resolve to different addresses based on context, time, location, or conditions',
-    icon: <Globe className="w-6 h-6" />,
-    category: 'intelligence',
-    priority: 'core',
-    implementation: 'Smart contracts with conditional logic and cross-chain integration',
-    competitiveAdvantage: 'ENS only resolves to one address - ours are context-aware'
-  },
-  {
-    id: 'social-intelligence',
-    title: 'Real-Time Social Integration',
-    description: 'Live social media feeds, engagement metrics, and community reputation',
-    icon: <Users className="w-6 h-6" />,
-    category: 'social',
-    priority: 'core',
-    implementation: 'API integrations with major social platforms and real-time data processing',
-    competitiveAdvantage: 'ENS has no social features - ours are social-first'
-  },
-  {
-    id: 'financial-intelligence',
-    title: 'Financial Portfolio Intelligence',
-    description: 'Live portfolio tracking, investment preferences, and deal flow management',
-    icon: <TrendingUp className="w-6 h-6" />,
-    category: 'financial',
-    priority: 'advanced',
-    implementation: 'DeFi protocol integrations and portfolio analytics engines',
-    competitiveAdvantage: 'ENS is just a name - ours is a financial identity hub'
-  },
-  {
-    id: 'gaming-metaverse',
-    title: 'Gaming & Metaverse Identity',
-    description: 'Cross-platform gaming achievements, metaverse assets, and virtual identity',
-    icon: <Gamepad2 className="w-6 h-6" />,
-    category: 'gaming',
-    priority: 'advanced',
-    implementation: 'Gaming API integrations and metaverse platform partnerships',
-    competitiveAdvantage: 'ENS doesn\'t integrate with gaming - ours is built for the metaverse'
-  },
-  {
-    id: 'business-intelligence',
-    title: 'Live Business Metrics',
-    description: 'Real-time company data, hiring status, and market intelligence',
-    icon: <BarChart3 className="w-6 h-6" />,
-    category: 'business',
-    priority: 'advanced',
-    implementation: 'Business data APIs and market intelligence platforms',
-    competitiveAdvantage: 'ENS is personal - ours serves businesses with live data'
-  },
-  {
-    id: 'predictive-analytics',
-    title: 'Predictive Analytics',
-    description: 'AI-powered market predictions, personal insights, and trend analysis',
-    icon: <Target className="w-6 h-6" />,
-    category: 'intelligence',
-    priority: 'premium',
-    implementation: 'Advanced ML models trained on market and social data',
-    competitiveAdvantage: 'ENS is reactive - ours predicts and advises'
-  },
-  {
-    id: 'verification-system',
-    title: 'Multi-Level Verification',
-    description: 'KYC, social proof, and reputation-based trust scoring',
+    id: 'encrypted-metadata',
+    title: 'Encrypted Metadata Protection',
+    description: 'Store sensitive AI agent data securely with built-in encryption',
     icon: <Shield className="w-6 h-6" />,
-    category: 'social',
-    priority: 'premium',
-    implementation: 'Identity verification services and social proof algorithms',
-    competitiveAdvantage: 'ENS has no verification - ours builds trust systematically'
+    category: 'security',
+    priority: 'core',
+    benefit: 'Traditional NFTs expose all metadata publicly - iNFTs keep AI intelligence private',
+    zeroGAdvantage: '0G Storage provides tamper-proof, encrypted storage with 99.999% durability'
   },
   {
-    id: 'emotional-evolution',
-    title: 'Emotional & Mood Evolution',
-    description: 'Names that reflect your current mood, creativity, and emotional state',
-    icon: <Heart className="w-6 h-6" />,
-    category: 'creative',
-    priority: 'premium',
-    implementation: 'Mood tracking APIs and emotional intelligence algorithms',
-    competitiveAdvantage: 'ENS is cold and technical - ours has emotional intelligence'
+    id: 'secure-transfer',
+    title: 'Secure Metadata Transfer',
+    description: 'Transfer both ownership AND encrypted metadata together',
+    icon: <Zap className="w-6 h-6" />,
+    category: 'inft',
+    priority: 'core',
+    benefit: 'ERC-721 only transfers ownership - ERC-7857 transfers complete AI functionality',
+    zeroGAdvantage: '0G Chain executes transfers with cryptographic proofs and oracle verification'
   },
   {
-    id: 'governance-integration',
-    title: 'Governance & DAO Integration',
-    description: 'Voting power, governance participation, and community leadership',
-    icon: <Crown className="w-6 h-6" />,
-    category: 'social',
+    id: 'dynamic-evolution',
+    title: 'Dynamic AI Evolution',
+    description: 'AI agents that learn and evolve while maintaining NFT ownership',
+    icon: <Brain className="w-6 h-6" />,
+    category: 'ai',
+    priority: 'core',
+    benefit: 'Static NFTs become outdated - iNFTs grow more valuable over time',
+    zeroGAdvantage: '0G Compute enables secure AI inference without exposing model data'
+  },
+  {
+    id: 'oracle-verification',
+    title: 'Oracle-Based Verification',
+    description: 'TEE and ZKP proofs ensure transfer integrity and data authenticity',
+    icon: <Target className="w-6 h-6" />,
+    category: 'security',
     priority: 'advanced',
-    implementation: 'DAO governance platform integrations and voting analytics',
-    competitiveAdvantage: 'ENS governance is basic - ours is comprehensive and engaging'
+    benefit: 'No verification in traditional NFTs - iNFTs provide cryptographic guarantees',
+    zeroGAdvantage: '0G infrastructure supports both TEE and ZKP oracle implementations'
+  },
+  {
+    id: 'authorized-usage',
+    title: 'Authorized Usage Control',
+    description: 'Grant AI agent access without transferring ownership',
+    icon: <Users className="w-6 h-6" />,
+    category: 'inft',
+    priority: 'advanced',
+    benefit: 'Enable AI-as-a-Service models while maintaining full ownership',
+    zeroGAdvantage: '0G Chain smart contracts manage complex permission systems'
+  },
+  {
+    id: 'clone-functionality',
+    title: 'Clone & Distribute',
+    description: 'Create new tokens with same AI metadata for distribution',
+    icon: <Star className="w-6 h-6" />,
+    category: 'inft',
+    priority: 'advanced',
+    benefit: 'Preserve original while enabling AI agent templates and licensing',
+    zeroGAdvantage: '0G Storage efficiently manages multiple encrypted copies'
+  },
+  {
+    id: 'real-time-updates',
+    title: 'Real-Time Metadata Updates',
+    description: 'Update AI agent capabilities without breaking NFT integrity',
+    icon: <TrendingUp className="w-6 h-6" />,
+    category: 'ai',
+    priority: 'premium',
+    benefit: 'Traditional NFTs are immutable - iNFTs support secure evolution',
+    zeroGAdvantage: '0G Storage provides version control and update verification'
+  },
+  {
+    id: 'cross-chain-compatibility',
+    title: 'Cross-Chain Compatibility',
+    description: 'Deploy and transfer iNFTs across multiple blockchain networks',
+    icon: <Globe className="w-6 h-6" />,
+    category: 'blockchain',
+    priority: 'premium',
+    benefit: 'Break free from single-chain limitations',
+    zeroGAdvantage: '0G infrastructure designed for multi-chain AI applications'
+  },
+  {
+    id: 'enterprise-grade',
+    title: 'Enterprise-Grade Security',
+    description: 'Military-grade encryption and compliance-ready infrastructure',
+    icon: <Crown className="w-6 h-6" />,
+    category: 'security',
+    priority: 'premium',
+    benefit: 'Meet enterprise security requirements and regulatory compliance',
+    zeroGAdvantage: '0G provides institutional-grade security with audit trails'
   }
 ];
 
@@ -140,12 +130,12 @@ export default function RevolutionaryNameFeatures() {
 
   const categories = [
     { id: 'all', name: 'All Features', icon: <Sparkles className="w-5 h-5" /> },
-    { id: 'intelligence', name: 'AI Intelligence', icon: <Brain className="w-5 h-5" /> },
-    { id: 'social', name: 'Social & Community', icon: <Users className="w-5 h-5" /> },
-    { id: 'financial', name: 'Financial & Investment', icon: <TrendingUp className="w-5 h-5" /> },
-    { id: 'gaming', name: 'Gaming & Metaverse', icon: <Gamepad2 className="w-5 h-5" /> },
-    { id: 'business', name: 'Business Intelligence', icon: <BarChart3 className="w-5 h-5" /> },
-    { id: 'creative', name: 'Creative & Emotional', icon: <Heart className="w-5 h-5" /> }
+    { id: 'inft', name: 'iNFT Core', icon: <Star className="w-5 h-5" /> },
+    { id: 'blockchain', name: '0G Blockchain', icon: <Zap className="w-5 h-5" /> },
+    { id: 'security', name: 'Security & Privacy', icon: <Shield className="w-5 h-5" /> },
+    { id: 'ai', name: 'AI & Intelligence', icon: <Brain className="w-5 h-5" /> },
+    { id: 'storage', name: '0G Storage', icon: <TrendingUp className="w-5 h-5" /> },
+    { id: 'performance', name: 'Performance', icon: <Award className="w-5 h-5" /> }
   ];
 
   const priorities = [
@@ -168,10 +158,10 @@ export default function RevolutionaryNameFeatures() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center"
       >
-        <h1 className="text-4xl font-bold text-white mb-4">🚀 Revolutionary Name Features</h1>
+        <h1 className="text-4xl font-bold text-white mb-4">🚀 iNFT Benefits Over Traditional NFTs</h1>
         <p className="text-gray-300 text-lg max-w-3xl mx-auto">
-          Discover how our intelligent naming service goes far beyond ENS with AI-powered features, 
-          real-time data integration, and dynamic evolution capabilities
+          Discover how Intelligent NFTs (iNFTs) powered by the 0G blockchain revolutionize digital asset ownership, 
+          enabling secure AI agent tokenization with encrypted metadata and dynamic evolution capabilities
         </p>
       </motion.div>
 
@@ -255,9 +245,9 @@ export default function RevolutionaryNameFeatures() {
             
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <Zap className="w-4 h-4" />
-              <span>Competitive Advantage</span>
+              <span>iNFT Benefit</span>
             </div>
-            <p className="text-gray-400 text-xs mt-1">{feature.competitiveAdvantage}</p>
+                            <p className="text-gray-400 text-xs mt-1">{feature.benefit}</p>
           </motion.div>
         ))}
       </motion.div>
@@ -307,57 +297,53 @@ export default function RevolutionaryNameFeatures() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Implementation</h3>
-                <p className="text-gray-300">{selectedFeature.implementation}</p>
+                              <h3 className="text-lg font-semibold text-white mb-2">iNFT Benefit</h3>
+              <p className="text-gray-300">{selectedFeature.benefit}</p>
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Competitive Advantage</h3>
-                <p className="text-gray-300">{selectedFeature.competitiveAdvantage}</p>
+                              <h3 className="text-lg font-semibold text-white mb-2">0G Blockchain Advantage</h3>
+              <p className="text-gray-300">{selectedFeature.zeroGAdvantage}</p>
               </div>
 
               <div className="bg-gray-700 rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-white mb-2">Example Use Case</h3>
                 <div className="text-gray-300 text-sm">
-                  {selectedFeature.id === 'ai-identity' && (
-                    <p>Alice's name "alice.0g" evolves from "New User" to "Community Leader" 
-                    based on her contributions, social interactions, and reputation growth.</p>
+                  {selectedFeature.id === 'encrypted-metadata' && (
+                    <p>An AI trading bot's model weights and strategy are encrypted and stored securely, 
+                    ensuring proprietary algorithms remain private while maintaining NFT ownership.</p>
                   )}
-                  {selectedFeature.id === 'multi-resolution' && (
-                    <p>Business name "company.0g" resolves to different addresses during 
-                    business hours vs after hours, or based on user location.</p>
+                  {selectedFeature.id === 'secure-transfer' && (
+                    <p>When transferring an AI agent NFT, both the token ownership AND the encrypted 
+                    AI intelligence transfer together, ensuring the new owner receives a fully functional agent.</p>
                   )}
-                  {selectedFeature.id === 'social-intelligence' && (
-                    <p>Creator name "artist.0g" shows live social media feeds, current 
-                    follower count, and real-time engagement metrics.</p>
+                  {selectedFeature.id === 'dynamic-evolution' && (
+                    <p>An AI content creator NFT learns from user interactions and evolves its 
+                    creative capabilities while maintaining the same NFT token ID and ownership.</p>
                   )}
-                  {selectedFeature.id === 'financial-intelligence' && (
-                    <p>Investor name "vc.0g" displays live portfolio value, investment 
-                    preferences, and current deal flow status.</p>
+                  {selectedFeature.id === 'oracle-verification' && (
+                    <p>TEE oracles verify that AI metadata matches the original during transfers, 
+                    providing cryptographic proof that no tampering occurred.</p>
                   )}
-                  {selectedFeature.id === 'gaming-metaverse' && (
-                    <p>Gamer name "player.0g" shows achievements across multiple games, 
-                    metaverse assets, and virtual identity status.</p>
+                  {selectedFeature.id === 'authorized-usage' && (
+                    <p>A company can license their AI agent NFT to clients for usage without 
+                    transferring ownership, enabling AI-as-a-Service business models.</p>
                   )}
-                  {selectedFeature.id === 'business-intelligence' && (
-                    <p>Startup name "startup.0g" displays live metrics like user count, 
-                    revenue, team size, and hiring status.</p>
+                  {selectedFeature.id === 'clone-functionality' && (
+                    <p>An AI researcher can clone their trained model NFT to create multiple 
+                    instances for distribution while preserving the original.</p>
                   )}
-                  {selectedFeature.id === 'predictive-analytics' && (
-                    <p>Analyst name "trader.0g" provides market predictions, portfolio 
-                    recommendations, and risk alerts.</p>
+                  {selectedFeature.id === 'real-time-updates' && (
+                    <p>An AI assistant NFT receives continuous updates to its knowledge base 
+                    and capabilities without breaking the NFT's integrity or ownership.</p>
                   )}
-                  {selectedFeature.id === 'verification-system' && (
-                    <p>Verified name "trusted.0g" shows KYC status, social proof, and 
-                    community reputation score.</p>
+                  {selectedFeature.id === 'cross-chain-compatibility' && (
+                    <p>An AI agent NFT can be deployed on Ethereum mainnet and later transferred 
+                    to 0G Chain for enhanced performance and lower costs.</p>
                   )}
-                  {selectedFeature.id === 'emotional-evolution' && (
-                    <p>Artist name "creative.0g" reflects current mood, creative phase, 
-                    and inspiration sources.</p>
-                  )}
-                  {selectedFeature.id === 'governance-integration' && (
-                    <p>Governor name "dao.0g" shows voting power, participation rate, 
-                    and governance reputation.</p>
+                  {selectedFeature.id === 'enterprise-grade' && (
+                    <p>Financial institutions can tokenize AI trading algorithms with military-grade 
+                    encryption, meeting regulatory compliance and audit requirements.</p>
                   )}
                 </div>
               </div>

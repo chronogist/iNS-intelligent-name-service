@@ -189,6 +189,7 @@ export default function UserProfileNav({ isConnected }: UserProfileNavProps) {
               <ExternalLink className="size-3" />
               View on Explorer
             </button>
+
             {userProfile && (
               <button
                 onClick={() => navigator.clipboard.writeText(userProfile.name)}
