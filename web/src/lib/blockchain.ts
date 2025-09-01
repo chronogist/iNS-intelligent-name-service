@@ -16,6 +16,9 @@ const REGISTRAR_ABI = [
   "function purchase(string label, address resolver_, uint64 ttl, string encryptedURI, bytes32 metadataHash) payable returns (uint256 tokenId)",
   "function ownerOf(uint256 tokenId) view returns (address)",
   "function tokenURI(uint256 tokenId) view returns (string)",
+  "function balanceOf(address owner) view returns (uint256)",
+  "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)",
+  "function totalSupply() view returns (uint256)",
   // ERC7857 dynamism functions
   "function getMetadataHash(uint256 tokenId) view returns (bytes32)",
   "function getEncryptedURI(uint256 tokenId) view returns (string)",
@@ -26,7 +29,9 @@ const REGISTRAR_ABI = [
   "event MetadataUpdated(uint256 indexed tokenId, bytes32 newHash)",
   "event UsageAuthorized(uint256 indexed tokenId, address indexed executor)",
   // Registration events
-  "event NameRegistered(uint256 indexed tokenId, address indexed owner, string name, uint256 price)"
+  "event NameRegistered(uint256 indexed tokenId, address indexed owner, string name, uint256 price)",
+  // ERC721 Transfer event
+  "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"
 ];
 
 export interface ContractAddresses {
@@ -1456,10 +1461,353 @@ export class BlockchainService {
 
     try {
       const address = await this.signer.getAddress();
-      return await this.getNFTsForAddress(address);
+      console.log('🔍 Getting NFTs for address:', address);
+      
+      // Try multiple approaches to get NFTs
+      let nfts = await this.getNFTsForAddress(address);
+      
+      // If no NFTs found, try direct blockchain query
+      if (nfts.length === 0) {
+        console.log('🔄 No NFTs found in mapping, trying direct blockchain query...');
+        nfts = await this.getNFTsForAddressDirect(address);
+      }
+      
+      // If still no NFTs, try event-based approach
+      if (nfts.length === 0) {
+        console.log('🔄 No NFTs found in direct query, trying event-based approach...');
+        nfts = await this.getNFTsForAddressFromEvents(address);
+      }
+      
+      console.log(`✅ Found ${nfts.length} NFTs for address ${address}`);
+      return nfts;
     } catch (error) {
       console.error('Error getting user NFTs:', error);
       throw new Error(`Failed to get user NFTs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Get NFTs directly from blockchain using balance and enumeration
+   */
+  async getNFTsForAddressDirect(address: string): Promise<Array<{
+    name: string;
+    tokenId: string;
+    registrationDate: string;
+    price: bigint;
+  }>> {
+    if (!this.registrar) {
+      throw new Error('Blockchain service not initialized');
+    }
+
+    try {
+      console.log('🔍 Getting NFTs directly from blockchain for address:', address);
+      
+      // Check if the contract supports ERC721Enumerable
+      let balance: bigint;
+      try {
+        balance = await this.registrar.balanceOf(address);
+        console.log(`📊 Balance: ${balance.toString()}`);
+      } catch (error) {
+        console.log('❌ Contract does not support balanceOf, trying alternative approach...');
+        return await this.scanForNFTs(address, 100); // Fall back to scanning
+      }
+
+      if (balance === 0n) {
+        console.log('📊 Address has no NFTs');
+        return [];
+      }
+
+      const nfts = [];
+      
+      // Try to enumerate tokens using tokenOfOwnerByIndex
+      for (let i = 0; i < Number(balance); i++) {
+        try {
+          const tokenId = await this.registrar.tokenOfOwnerByIndex(address, i);
+          console.log(`✅ Found token ${tokenId} at index ${i}`);
+          
+          // Get token metadata
+          const nft = await this.getNFTMetadata(tokenId.toString());
+          if (nft) {
+            nfts.push(nft);
+          }
+        } catch (error) {
+          console.warn(`Could not get token at index ${i}:`, error);
+          break;
+        }
+      }
+
+      // If enumeration failed, fall back to scanning
+      if (nfts.length === 0) {
+        console.log('🔄 Enumeration failed, falling back to scanning...');
+        return await this.scanForNFTs(address, 100); // Scan more tokens
+      }
+
+      return nfts;
+    } catch (error) {
+      console.error('Error getting NFTs directly:', error);
+      console.log('🔄 Direct query failed, falling back to scanning...');
+      return await this.scanForNFTs(address, 100); // Fall back to scanning
+    }
+  }
+
+  /**
+   * Get NFTs using Transfer events
+   */
+  async getNFTsForAddressFromEvents(address: string): Promise<Array<{
+    name: string;
+    tokenId: string;
+    registrationDate: string;
+    price: bigint;
+  }>> {
+    if (!this.registrar) {
+      throw new Error('Blockchain service not initialized');
+    }
+
+    try {
+      console.log('🔍 Getting NFTs from Transfer events for address:', address);
+      
+      // Check if the contract supports Transfer events
+      if (!this.registrar.filters || typeof this.registrar.filters.Transfer !== 'function') {
+        console.log('⚠️ Contract does not support Transfer events, skipping event-based retrieval');
+        return [];
+      }
+      
+      // Get Transfer events where the address is the recipient
+      const filter = this.registrar.filters.Transfer(null, address, null);
+      const events = await this.registrar.queryFilter(filter);
+      
+      console.log(`📊 Found ${events.length} Transfer events`);
+      
+      const nfts = [];
+      const processedTokenIds = new Set<string>();
+      
+      for (const event of events) {
+        // Type guard to check if this is an EventLog with args
+        if ('args' in event && event.args && 'tokenId' in event.args) {
+          const tokenId = event.args.tokenId.toString();
+          
+          // Avoid duplicates
+          if (processedTokenIds.has(tokenId)) continue;
+          processedTokenIds.add(tokenId);
+          
+          // Check if the address still owns this token
+          try {
+            const currentOwner = await this.registrar.ownerOf(tokenId);
+            if (currentOwner.toLowerCase() === address.toLowerCase()) {
+              console.log(`✅ Token ${tokenId} is still owned by ${address}`);
+              
+              // Get token metadata
+              const nft = await this.getNFTMetadata(tokenId);
+              if (nft) {
+                nfts.push(nft);
+              }
+            }
+          } catch (error) {
+            console.warn(`Could not verify ownership of token ${tokenId}:`, error);
+          }
+        }
+      }
+      
+      return nfts;
+    } catch (error) {
+      console.error('Error getting NFTs from events:', error);
+      console.log('⚠️ Event-based retrieval failed, this is normal for some contracts');
+      return [];
+    }
+  }
+
+  /**
+   * Enhanced scanning method that scans more tokens
+   */
+  async scanForNFTs(address: string, maxTokenId: number = 100): Promise<Array<{
+    name: string;
+    tokenId: string;
+    registrationDate: string;
+    price: bigint;
+  }>> {
+    if (!this.registrar) {
+      throw new Error('Blockchain service not initialized');
+    }
+
+    try {
+      console.log(`🔍 Scanning tokens 1 to ${maxTokenId} for address:`, address);
+      
+      const nfts = [];
+      
+      for (let i = 1; i <= maxTokenId; i++) {
+        try {
+          const owner = await this.registrar.ownerOf(i);
+          
+          if (owner.toLowerCase() === address.toLowerCase()) {
+            console.log(`✅ Found token ${i} owned by ${address}`);
+            
+            // Get token metadata
+            const nft = await this.getNFTMetadata(i.toString());
+            if (nft) {
+              nfts.push(nft);
+            }
+          }
+        } catch (error) {
+          // Token doesn't exist or other error, continue
+          continue;
+        }
+      }
+      
+      console.log(`✅ Scan complete. Found ${nfts.length} NFTs`);
+      return nfts;
+    } catch (error) {
+      console.error('Error scanning for NFTs:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Check if there are any NFTs on the contract at all
+   */
+  async checkContractForNFTs(): Promise<{
+    hasNFTs: boolean;
+    totalTokens: number;
+    sampleTokens: Array<{ tokenId: string; owner: string }>;
+  }> {
+    if (!this.registrar) {
+      throw new Error('Blockchain service not initialized');
+    }
+
+    try {
+      console.log('🔍 Checking if contract has any NFTs...');
+      
+      const sampleTokens = [];
+      let hasNFTs = false;
+      let totalTokens = 0;
+      
+      // Scan first 50 tokens to see if any exist
+      for (let i = 1; i <= 50; i++) {
+        try {
+          const owner = await this.registrar.ownerOf(i);
+          if (owner && owner !== ethers.ZeroAddress) {
+            hasNFTs = true;
+            totalTokens++;
+            sampleTokens.push({ tokenId: i.toString(), owner });
+            console.log(`✅ Found token ${i} owned by ${owner}`);
+          }
+        } catch (error) {
+          // Token doesn't exist
+          continue;
+        }
+      }
+      
+      console.log(`📊 Contract has ${totalTokens} tokens in first 50 IDs`);
+      return { hasNFTs, totalTokens, sampleTokens };
+      
+    } catch (error) {
+      console.error('Error checking contract for NFTs:', error);
+      return { hasNFTs: false, totalTokens: 0, sampleTokens: [] };
+    }
+  }
+
+  /**
+   * Check if a specific name exists on the contract
+   */
+  async checkNameExists(name: string): Promise<{
+    exists: boolean;
+    tokenId?: string;
+    owner?: string;
+    tokenURI?: string;
+  }> {
+    if (!this.registrar) {
+      throw new Error('Blockchain service not initialized');
+    }
+
+    try {
+      console.log(`🔍 Checking if name "${name}" exists...`);
+      
+      // Scan tokens to find the name
+      for (let i = 1; i <= 100; i++) {
+        try {
+          const owner = await this.registrar.ownerOf(i);
+          if (owner && owner !== ethers.ZeroAddress) {
+            // Get token URI to check the name
+            try {
+              const tokenURI = await this.registrar.tokenURI(i);
+              if (tokenURI.startsWith('data:application/json;base64,')) {
+                const jsonB64 = tokenURI.replace('data:application/json;base64,', '');
+                const jsonStr = ethers.toUtf8String(ethers.getBytes('0x' + Buffer.from(jsonB64, 'base64').toString('hex')));
+                const tokenData = JSON.parse(jsonStr);
+                
+                if (tokenData.name === `${name}.0g`) {
+                  console.log(`✅ Found name "${name}.0g" with token ID ${i}`);
+                  return {
+                    exists: true,
+                    tokenId: i.toString(),
+                    owner,
+                    tokenURI
+                  };
+                }
+              }
+            } catch (uriError) {
+              console.warn(`Could not get token URI for ${i}:`, uriError);
+            }
+          }
+        } catch (error) {
+          // Token doesn't exist
+          continue;
+        }
+      }
+      
+      console.log(`❌ Name "${name}" not found`);
+      return { exists: false };
+      
+    } catch (error) {
+      console.error(`Error checking if name "${name}" exists:`, error);
+      return { exists: false };
+    }
+  }
+
+  /**
+   * Get metadata for a specific token ID
+   */
+  async getNFTMetadata(tokenId: string): Promise<{
+    name: string;
+    tokenId: string;
+    registrationDate: string;
+    price: bigint;
+  } | null> {
+    if (!this.registrar) {
+      return null;
+    }
+
+    try {
+      // Get the name from token URI
+      const tokenURI = await this.registrar.tokenURI(tokenId);
+      
+      let name = `token_${tokenId}`;
+      let registrationDate = new Date().toISOString();
+      let price = 0n;
+
+      // Try to extract name from token URI
+      if (tokenURI.startsWith('data:application/json;base64,')) {
+        try {
+          const jsonB64 = tokenURI.replace('data:application/json;base64,', '');
+          const jsonStr = ethers.toUtf8String(ethers.getBytes('0x' + Buffer.from(jsonB64, 'base64').toString('hex')));
+          const tokenData = JSON.parse(jsonStr);
+          
+          if (tokenData.name && tokenData.name.endsWith('.0g')) {
+            name = tokenData.name.replace('.0g', '');
+          }
+        } catch (parseError) {
+          console.warn(`Could not parse token URI for ${tokenId}:`, parseError);
+        }
+      }
+
+      return {
+        name,
+        tokenId,
+        registrationDate,
+        price
+      };
+    } catch (error) {
+      console.warn(`Could not get metadata for token ${tokenId}:`, error);
+      return null;
     }
   }
 
@@ -1493,7 +1841,7 @@ export class BlockchainService {
       console.log('🔄 Scanning tokens for ownership...');
       
       const userNFTs = [];
-      const maxTokenId = 20; // Scan first 20 tokens (should be enough for most cases)
+      const maxTokenId = 100; // Scan first 100 tokens (should be enough for most cases)
       
       console.log(`Scanning token IDs 1 to ${maxTokenId}...`);
       
@@ -1622,3 +1970,4 @@ declare global {
     };
   }
 }
+

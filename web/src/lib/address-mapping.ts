@@ -88,7 +88,7 @@ export class AddressMappingService {
       await blockchainService.initialize();
 
       const newMapping: AddressMapping = {};
-      const maxTokenId = 50; // Scan first 50 tokens
+      const maxTokenId = 100; // Scan first 100 tokens
 
       console.log(`Scanning tokens 1 to ${maxTokenId} for address mapping...`);
 
