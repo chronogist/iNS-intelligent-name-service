@@ -76,7 +76,7 @@ export default function MyProfilePage() {
       console.log('📊 User NFTs details:', JSON.stringify(serializableNfts, null, 2));
       
       // If no NFTs found through getUserNFTs, try direct scan as fallback
-      if (nfts.length === 0) {
+      if (nfts.length === 0 && address) {
         console.log('🔄 No NFTs found through getUserNFTs, trying direct scan...');
         try {
           nfts = await blockchainService.getNFTsForAddressWithMetadata(address);
