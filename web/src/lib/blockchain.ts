@@ -1582,6 +1582,16 @@ export class BlockchainService {
   async clearAddressMappingCache(): Promise<void> {
     addressMappingService.clearCache();
   }
+
+  // Get contract addresses
+  getContractAddresses(): ContractAddresses | null {
+    return this.addresses;
+  }
+
+  // Get registrar contract address
+  getRegistrarAddress(): string | null {
+    return this.addresses?.registrar || null;
+  }
 }
 
 // Global instance
