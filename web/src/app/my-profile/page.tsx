@@ -59,7 +59,7 @@ export default function MyProfilePage() {
       console.log('Contracts deployed:', contractsDeployed);
       
       if (!contractsDeployed) {
-        setError('Contracts not deployed or not accessible. Please ensure you are on the 0G testnet (Galileo) in MetaMask.');
+        setError('Smart contracts not found on this network. Please switch to 0G testnet (Galileo) in MetaMask to use this dApp. The contracts are deployed on Chain ID 16601.');
         setLoading(false);
         return;
       }
@@ -171,25 +171,73 @@ export default function MyProfilePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-6">
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-8">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-red-800 mb-2">Error</h2>
-            <p className="text-red-700 mb-6">{error}</p>
-            <div className="flex gap-3">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        {/* Header */}
+        <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center gap-4">
               <button 
                 onClick={() => router.push('/')}
-                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300"
               >
-                Go Home
+                ← Back to Home
               </button>
-              <button 
-                onClick={loadUserNFTs}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Retry Connection
-              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Profile</h1>
+                <p className="text-gray-600 dark:text-gray-400">Your iNS Names</p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center max-w-2xl mx-auto px-6">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-8">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <AlertCircle className="w-8 h-8 text-yellow-600" />
+                <h2 className="text-2xl font-bold text-yellow-800">Network Configuration Required</h2>
+              </div>
+              
+              <p className="text-yellow-700 text-lg mb-6">
+                {error}
+              </p>
+              
+              <div className="bg-white border border-yellow-300 rounded-lg p-6 mb-6">
+                <h4 className="font-semibold text-yellow-800 mb-3 text-lg">Quick Fix:</h4>
+                <div className="text-sm text-yellow-700 space-y-3">
+                  <p>1. <strong>Add 0G Testnet to MetaMask:</strong></p>
+                  <div className="bg-gray-100 p-4 rounded text-left font-mono text-xs">
+                    <p><strong>Network Name:</strong> 0G Testnet (Galileo)</p>
+                    <p><strong>Chain ID:</strong> 16601</p>
+                    <p><strong>RPC URL:</strong> https://evmrpc-testnet.0g.ai/</p>
+                    <p><strong>Currency Symbol:</strong> 0G</p>
+                    <p><strong>Block Explorer:</strong> https://testnet.0g.ai/</p>
+                  </div>
+                  <p>2. <strong>Switch to 0G Testnet</strong></p>
+                  <p>3. <strong>Refresh this page</strong></p>
+                </div>
+              </div>
+              
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => window.open('https://testnet.0g.ai/', '_blank')}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  🌐 Visit 0G Testnet
+                </button>
+                <button
+                  onClick={() => router.push('/')}
+                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                >
+                  🏠 Go Home
+                </button>
+                <button
+                  onClick={loadUserNFTs}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                >
+                  🔄 Retry
+                </button>
+              </div>
             </div>
           </div>
         </div>
