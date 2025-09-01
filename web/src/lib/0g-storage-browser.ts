@@ -293,7 +293,7 @@ export class OGStorageBrowserService {
     const encodedMetadata = new TextEncoder().encode(metadataString);
     const cryptoKey = await crypto.subtle.importKey(
       'raw',
-      key,
+      new Uint8Array(key),
       { name: 'AES-GCM' },
       false,
       ['encrypt']
@@ -331,7 +331,7 @@ export class OGStorageBrowserService {
     // Decrypt using AES-GCM
     const cryptoKey = await crypto.subtle.importKey(
       'raw',
-      key,
+      new Uint8Array(key),
       { name: 'AES-GCM' },
       false,
       ['decrypt']
