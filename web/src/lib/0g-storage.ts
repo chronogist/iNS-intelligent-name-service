@@ -87,10 +87,16 @@ export class OGStorageService {
 
       // Convert to JSON and create file
       const metadataJson = JSON.stringify(encryptedMetadata);
-      const metadataBlob = new Blob([metadataJson], { type: 'application/json' });
       
-      // Create ZgFile from blob
-      const file = new ZgFile(metadataBlob, `${name}.0g-metadata.json`);
+      // Create temporary file path
+      const tempPath = `/tmp/${name}.0g-metadata.json`;
+      
+      // Write metadata to temporary file
+      const fs = require('fs').promises;
+      await fs.writeFile(tempPath, metadataJson);
+      
+      // Create ZgFile from file path
+      const file = new ZgFile(tempPath, `${name}.0g-metadata.json`);
       
       // Generate Merkle tree for verification
       const [tree, treeErr] = await file.merkleTree();
