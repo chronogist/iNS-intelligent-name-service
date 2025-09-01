@@ -23,6 +23,13 @@ const config: HardhatUserConfig = {
 			chainId: 16601,
 			gasPrice: 1_000_000_000
 		},
+		"0g-testnet": {
+			type: "http",
+			url: OG_RPC_URL,
+			accounts: [PRIVATE_KEY],
+			chainId: 16601,
+			gasPrice: 1_000_000_000
+		},
 		localhost: {
 			type: "http",
 			url: "http://127.0.0.1:8545"
