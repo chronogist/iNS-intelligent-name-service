@@ -106,7 +106,7 @@ export default function NFTDetailsPage({ params }: NFTDetailsPageProps) {
       let registrationDate = new Date().toISOString();
       let transactionHash = '0x0000000000000000000000000000000000000000000000000000000000000000';
       
-      try {
+            try {
         console.log('🔍 Searching for registration event for token ID:', tokenId);
         const registrationEvent = await blockchainService.getRegistrationEventForToken(tokenId);
         
@@ -388,11 +388,11 @@ export default function NFTDetailsPage({ params }: NFTDetailsPageProps) {
                 </button>
               </div>
               <button
-                onClick={() => window.open(`https://etherscan.io/address/${nftData.owner}`, '_blank')}
+                onClick={() => window.open(`https://chainscan-galileo.0g.ai/address/${nftData.owner}`, '_blank')}
                 className="w-full flex items-center justify-center gap-2 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
               >
                 <ExternalLink className="size-3" />
-                View on Explorer
+                View on 0G Chainscan
               </button>
             </div>
 
@@ -458,11 +458,11 @@ export default function NFTDetailsPage({ params }: NFTDetailsPageProps) {
               </div>
               
               <button
-                onClick={() => window.open(`https://etherscan.io/tx/${nftData.transactionHash}`, '_blank')}
-                className="w-full flex items-center justify-center gap-2 p-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all duration-200 mt-3 text-sm"
+                onClick={() => window.open(`https://chainscan-galileo.0g.ai/tx/${nftData.transactionHash}`, '_blank')}
+                className="w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all duration-200 mt-3 text-sm px-3 py-2"
               >
                 <ExternalLink className="size-3" />
-                View Transaction
+                View on 0G Chainscan
               </button>
             </div>
 
