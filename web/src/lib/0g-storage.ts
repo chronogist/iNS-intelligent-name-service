@@ -125,7 +125,7 @@ export class OGStorageService {
         encryptedURI,
         metadataHash: encryptedData.hash,
         rootHash: tree?.rootHash() || '',
-        txHash: tx || ''
+        txHash: (tx as any)?.txHash || ''
       };
     } catch (error) {
       console.error('Error uploading name metadata:', error);
@@ -247,11 +247,11 @@ export class OGStorageService {
       // Retrieve from 0G KV
       const value = await this.kvClient.getValue(
         streamId, 
-        ethers.encodeBase64(keyBytes)
+        keyBytes
       );
 
       if (value) {
-        return JSON.parse(value);
+        return JSON.parse(value.toString());
       }
 
       return null;
@@ -277,8 +277,16 @@ export class OGStorageService {
     }
 
     try {
-      // Create ZgFile from image
-      const file = new ZgFile(imageFile, `${name}-avatar.${imageFile.name.split('.').pop()}`);
+      // Convert File to temporary file for server-side processing
+      const tempPath = `/tmp/${name}-avatar.${imageFile.name.split('.').pop()}`;
+      const arrayBuffer = await imageFile.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      await fs.writeFile(tempPath, buffer);
+      
+      // Open file handle and create ZgFile
+      const fileHandle = await fs.open(tempPath, 'r');
+      const stats = await fs.stat(tempPath);
+      const file = new ZgFile(fileHandle, stats.size);
       
       // Generate Merkle tree
       const [tree, treeErr] = await file.merkleTree();
@@ -301,7 +309,7 @@ export class OGStorageService {
       return {
         avatarURI,
         rootHash: tree?.rootHash() || '',
-        txHash: tx || ''
+        txHash: (tx as any)?.txHash || ''
       };
     } catch (error) {
       console.error('Error uploading avatar:', error);
@@ -354,7 +362,7 @@ export class OGStorageService {
     const encodedMetadata = new TextEncoder().encode(metadataString);
     const cryptoKey = await crypto.subtle.importKey(
       'raw',
-      key,
+      new Uint8Array(key),
       { name: 'AES-GCM' },
       false,
       ['encrypt']
@@ -392,7 +400,7 @@ export class OGStorageService {
     // Decrypt using AES-GCM
     const cryptoKey = await crypto.subtle.importKey(
       'raw',
-      key,
+      new Uint8Array(key),
       { name: 'AES-GCM' },
       false,
       ['decrypt']
