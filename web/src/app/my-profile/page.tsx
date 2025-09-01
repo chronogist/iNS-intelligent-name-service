@@ -264,7 +264,7 @@ export default function MyProfilePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">Your Names</h2>
-                  <p className="text-gray-600 dark:text-gray-400">You own {userNFTs.length} name{userNFTs.length !== 1 ? &apos;s&apos; : &apos;&apos;}</p>
+                  <p className="text-gray-600 dark:text-gray-400">You own {userNFTs.length} name{userNFTs.length !== 1 ? 's' : ''}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-gray-500 dark:text-gray-400">Total Value</p>
