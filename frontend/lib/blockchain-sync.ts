@@ -93,7 +93,7 @@ export async function syncFromBlockchain(
     }
 
     return localData;
-  } catch (error) {
+  } catch (error: any) {
     // Silently fail and use local data
     console.warn('Could not sync from blockchain, using local data:', error);
     return localData;
@@ -128,7 +128,7 @@ export async function isDataSynced(
     });
 
     return Number(onChainScore) === localData.intelligenceScore;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error checking sync status:', error);
     return false;
   }

@@ -248,11 +248,11 @@ export class ZeroGStorageService {
         rootHash,
         metadataHash
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Error uploading to 0G Storage:', error);
       console.error('📋 Error details:', {
-        message: error.message,
-        stack: error.stack
+        message: error?.message || 'Unknown error',
+        stack: error?.stack || 'No stack trace'
       });
       throw error;
     }
@@ -296,7 +296,7 @@ export class ZeroGStorageService {
       fs.unlinkSync(tempPath);
 
       return metadata;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error downloading from 0G Storage:', error);
       throw error;
     }
@@ -451,7 +451,7 @@ export class BrowserZeroGStorageService {
         rootHash,
         metadataHash
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading to 0G Storage:', error);
       throw error;
     }

@@ -152,7 +152,7 @@ export class AgentLearningTracker {
       console.log('⏱️  Upload took:', uploadTime, 'ms');
       console.log('🎯 You can retrieve this data using the root hash');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Failed to upload metadata to 0G Storage:', error);
       console.error('⚠️  Learning data saved locally but not backed up to 0G Storage');
       // Still return the learning event even if upload fails

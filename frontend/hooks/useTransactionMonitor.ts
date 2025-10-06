@@ -40,7 +40,7 @@ export function useTransactionMonitor(onTransaction: (tx: any) => void) {
             timestamp: Date.now(),
           });
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error checking transactions:', error);
       }
     };

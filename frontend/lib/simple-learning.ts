@@ -34,7 +34,7 @@ export function getLearningData(domain: string): LearningData | null {
     const stored = localStorage.getItem(`${STORAGE_KEY}_${domain}`);
     if (!stored) return null;
     return JSON.parse(stored);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error loading learning data:', error);
     return null;
   }
@@ -63,7 +63,7 @@ export function initLearningData(domain: string, agentType: string): LearningDat
 export function saveLearningData(data: LearningData) {
   try {
     localStorage.setItem(`${STORAGE_KEY}_${data.domain}`, JSON.stringify(data));
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving learning data:', error);
   }
 }
