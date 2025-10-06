@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Brain, Zap, Loader2, CheckCircle, Cloud, Database, ExternalLink } from 'lucide-react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { getLearningData, getPendingCount, clearAfterSync } from '@/lib/simple-learning';
-import { ZeroGStorageService, AIAgentMetadata } from '@/lib/0g-storage';
+import { ZeroGStorageService, BrowserZeroGStorageService, AIAgentMetadata } from '@/lib/0g-storage';
 import { ethers } from 'ethers';
 import toast from 'react-hot-toast';
 
@@ -37,13 +37,24 @@ export default function LearningSync({ domain, inftAddress }: LearningSyncProps)
 
   const handleSync = async () => {
     if (!learningData || !inftAddress || !address) {
+      console.error('❌ Missing required data:', { learningData: !!learningData, inftAddress, address });
       toast.error('Cannot sync: missing data');
       return;
     }
 
+    console.log('🎯 Starting sync process...');
+    console.log('📊 Input data:', { 
+      domain, 
+      inftAddress, 
+      address, 
+      totalActions: learningData.totalActions,
+      pendingCount 
+    });
+
     try {
       setIsSyncing(true);
       setSyncStep('🔧 Preparing agent metadata...');
+      console.log('🔧 Step 1: Preparing agent metadata...');
 
       // Step 1: Create comprehensive agent metadata
       const agentMetadata: AIAgentMetadata = {
@@ -118,15 +129,20 @@ export default function LearningSync({ domain, inftAddress }: LearningSyncProps)
       setSyncStep('📤 Uploading to 0G Storage Network...');
 
       // Step 2: Create wallet signer for 0G Storage
+      console.log('🔐 Creating wallet signer for 0G Storage...');
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const walletSigner = new ethers.Wallet(await signer.signMessage('Create 0G Storage signer'), provider);
-
-      // Step 3: Upload to REAL 0G Storage Network
-      const storageService = new ZeroGStorageService();
-      console.log('🚀 Starting REAL 0G Storage upload...');
       
-      const uploadResult = await storageService.uploadAgentMetadata(agentMetadata, walletSigner);
+      console.log('👤 Signer address:', await signer.getAddress());
+      console.log('🔑 Creating 0G Storage wallet...');
+      
+      // Use the browser signer directly instead of creating a new wallet
+      console.log('🏗️  Initializing Browser 0G Storage Service...');
+      const storageService = new BrowserZeroGStorageService();
+      console.log('🚀 Starting REAL 0G Storage upload...');
+      console.log('📡 0G Storage service initialized');
+      
+      const uploadResult = await storageService.uploadAgentMetadata(agentMetadata, signer);
       
       console.log('✅ 0G Storage Upload Successful!');
       console.log('📍 Root Hash:', uploadResult.rootHash);
@@ -159,6 +175,11 @@ export default function LearningSync({ domain, inftAddress }: LearningSyncProps)
 
     } catch (error: any) {
       console.error('❌ Sync error:', error);
+      console.error('📋 Error details:', {
+        message: error?.message || 'Unknown error',
+        stack: error?.stack || 'No stack trace',
+        name: error?.name || 'Unknown error type'
+      });
       toast.error(error.message || 'Failed to sync to 0G Storage');
       setIsSyncing(false);
       setSyncStep('');
@@ -354,6 +375,23 @@ export default function LearningSync({ domain, inftAddress }: LearningSyncProps)
           </div>
         </div>
       )}
+
+      {/* Debug Test Button */}
+      <div className="mt-4">
+        <button
+          onClick={() => {
+            console.log('🧪 CONSOLE TEST: This should appear in your browser console!');
+            console.log('📊 Current learning data:', learningData);
+            console.log('🎯 Domain:', domain);
+            console.log('📍 INFT Address:', inftAddress);
+            console.log('👤 Wallet Address:', address);
+            toast.success('Check your browser console for debug logs!');
+          }}
+          className="w-full p-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-medium hover:bg-yellow-200 transition-colors"
+        >
+          🧪 Test Console Logging (Check F12 Console)
+        </button>
+      </div>
     </div>
   );
 }
