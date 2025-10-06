@@ -12,6 +12,9 @@ const profileRoutes = require('./routes/profiles');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy for Render deployment
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet());
 app.use(cors());
@@ -49,13 +52,36 @@ app.get('/health', (req, res) => {
   });
 });
 
+// API Health check
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    success: true, 
+    status: 'API is running',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+
 // Check domain availability
 app.get('/api/domains/available/:name',
-  query('name').isLength({ min: 3, max: 63 }).matches(/^[a-z0-9-]+$/),
-  handleValidationErrors,
   async (req, res) => {
     try {
       const { name } = req.params;
+      
+      // Basic validation
+      if (!name || name.length < 3 || name.length > 63) {
+        return res.status(400).json({
+          success: false,
+          error: 'Domain name must be between 3 and 63 characters'
+        });
+      }
+      
+      if (!/^[a-z0-9-]+$/.test(name)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Domain name can only contain lowercase letters, numbers, and hyphens'
+        });
+      }
       
       const available = await blockchain.checkAvailability(name);
       
@@ -78,12 +104,18 @@ app.get('/api/domains/available/:name',
 
 // Get domain price
 app.get('/api/domains/price/:name',
-  query('duration').optional().isInt({ min: 31536000 }),
-  handleValidationErrors,
   async (req, res) => {
     try {
       const { name } = req.params;
       const duration = parseInt(req.query.duration) || 31536000; // Default 1 year
+      
+      // Basic validation
+      if (!name || name.length < 3 || name.length > 63) {
+        return res.status(400).json({
+          success: false,
+          error: 'Domain name must be between 3 and 63 characters'
+        });
+      }
       
       const priceInEth = await blockchain.getPrice(name, duration);
       
