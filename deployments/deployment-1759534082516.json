@@ -1,0 +1,19 @@
+{
+  "network": "ogTestnet",
+  "chainId": "16602",
+  "deployer": "0xd32B97733d6A8d3c35fD22B096F4c8A8e6072ed0",
+  "timestamp": "2025-10-03T23:28:02.516Z",
+  "contracts": {
+    "INSRegistry": {
+      "proxy": "0xfDf463C23df9ac82D6946A34b9c8A8dDF23d44a3",
+      "implementation": "0xE4809646DC1AaEd47BbC08311da458027f901517"
+    }
+  },
+  "config": {
+    "oracle": "0xd32B97733d6A8d3c35fD22B096F4c8A8e6072ed0",
+    "treasury": "0x55FfDb42694Eca4B1dBB23a57Ffd40E2C26450c9",
+    "admin": "0xd32B97733d6A8d3c35fD22B096F4c8A8e6072ed0",
+    "basePrice": "100000000000000000",
+    "premiumPrice": "100000000000000000"
+  }
+}

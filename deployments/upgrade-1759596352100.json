@@ -1,0 +1,13 @@
+{
+  "network": "ogTestnet",
+  "chainId": "16602",
+  "upgrader": "0xd32B97733d6A8d3c35fD22B096F4c8A8e6072ed0",
+  "timestamp": "2025-10-04T16:45:52.100Z",
+  "contracts": {
+    "INSRegistry": {
+      "proxy": "0xfDf463C23df9ac82D6946A34b9c8A8dDF23d44a3",
+      "oldImplementation": "0xE4809646DC1AaEd47BbC08311da458027f901517",
+      "newImplementation": "0x8eF7404a6458e4261D5f23B6F21c52e92867913d"
+    }
+  }
+}
