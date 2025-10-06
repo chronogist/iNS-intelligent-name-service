@@ -1,4 +1,82 @@
-# 🚀 Vercel Deployment - Data Storage Guide
+# 🚀 Vercel Deployment Guide - iNS Frontend
+
+## 🛠️ Quick Fix for Current Error
+
+**Error:** `The specified Root Directory "web" does not exist`
+
+**Solution:** I've added a `vercel.json` configuration file that tells Vercel to use the `frontend` directory.
+
+---
+
+## 📋 Deployment Steps
+
+### 1. Update Vercel Project Settings
+
+Go to your Vercel dashboard and update these settings:
+
+**Option A: Use vercel.json (Recommended)**
+- The `vercel.json` file I created will handle this automatically
+- No manual configuration needed
+
+**Option B: Manual Configuration**
+- **Root Directory:** `frontend`
+- **Build Command:** `npm run build`
+- **Output Directory:** `.next`
+- **Install Command:** `npm install`
+
+### 2. Environment Variables
+
+Add these environment variables in your Vercel dashboard:
+
+```bash
+# 0G Network Configuration
+NEXT_PUBLIC_RPC_URL=https://evmrpc-testnet.0g.ai
+NEXT_PUBLIC_INDEXER_RPC=https://indexer-storage-testnet-turbo.0g.ai
+NEXT_PUBLIC_CHAIN_ID=16602
+NEXT_PUBLIC_CHAIN_NAME=0G Testnet
+NEXT_PUBLIC_EXPLORER_URL=https://chainscan-galileo.0g.ai
+
+# Smart Contract Addresses
+NEXT_PUBLIC_REGISTRY_ADDRESS=0x507d8324A029f87BdFFF2025215AABBA0326a7bd
+
+# API Configuration
+NEXT_PUBLIC_API_URL=https://your-backend-url.vercel.app
+
+# WalletConnect (Get from https://cloud.walletconnect.com)
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
+```
+
+### 3. Redeploy
+
+After updating the configuration:
+1. Go to your Vercel dashboard
+2. Click "Redeploy" on your latest deployment
+3. Or push a new commit to trigger auto-deployment
+
+---
+
+## 🔧 Project Structure
+
+```
+iNS-intelligent-name-service/
+├── vercel.json                 # ✅ NEW: Vercel configuration
+├── frontend/                   # 🎯 Next.js application
+│   ├── package.json
+│   ├── next.config.js
+│   ├── app/
+│   ├── components/
+│   └── lib/
+├── backend/                    # 🔄 Separate deployment
+├── contracts/                  # 📜 Smart contracts
+└── README.md
+```
+
+**Key Points:**
+- ✅ Frontend deploys to Vercel (Static/Serverless)
+- 🔄 Backend needs separate deployment (Railway, Render, etc.)
+- 📜 Smart contracts already deployed to 0G Network
+
+---
 
 ## 📊 Current Data Storage Architecture
 
