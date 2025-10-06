@@ -7,7 +7,7 @@ import {
   Activity, Target, Award, Clock, BarChart3
 } from 'lucide-react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { getLearningData, getPendingCount, clearAfterSync } from '@/lib/simple-learning';
+import { getLearningData, getPendingCount, clearAfterSync, initLearningData } from '@/lib/simple-learning';
 import { syncFromBlockchain } from '@/lib/blockchain-sync';
 import toast from 'react-hot-toast';
 
@@ -87,8 +87,81 @@ export default function LearningAnalytics({ domain, inftAddress }: LearningAnaly
     }
   }, [isSuccess, isSyncing, domain]);
 
+  // Show empty state when no learning data exists
   if (!learningData) {
-    return null;
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-card p-6"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-gray-500/20 to-slate-500/20 rounded-xl">
+              <Brain className="w-6 h-6 text-gray-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-display font-bold">AI Intelligence Analytics</h2>
+              <p className="text-sm text-dark-400">Ready to start learning</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Empty State */}
+        <div className="text-center py-12">
+          <div className="mb-6">
+            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-primary-500/10 to-accent-500/10 rounded-full flex items-center justify-center mb-4">
+              <Brain className="w-10 h-10 text-primary-400" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">No Learning Data Yet</h3>
+            <p className="text-dark-400 max-w-md mx-auto">
+              Your AI agent hasn't started learning yet. Begin interacting with your domain or visit the Learning Dashboard to start training.
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => window.location.href = `/domains/${domain}/learning`}
+              className="btn-primary flex items-center gap-2 justify-center"
+            >
+              <Brain className="w-4 h-4" />
+              Start Learning
+            </button>
+            <button
+              onClick={() => {
+                // Initialize empty learning data for this domain
+                initLearningData(domain, 'ai_assistant');
+                setLearningData(getLearningData(domain));
+                setPendingCount(getPendingCount(domain));
+                toast.success('AI agent initialized for ' + domain);
+              }}
+              className="btn-secondary flex items-center gap-2 justify-center"
+            >
+              <Zap className="w-4 h-4" />
+              Initialize Agent
+            </button>
+          </div>
+
+          {/* Stats Preview */}
+          <div className="grid grid-cols-3 gap-4 mt-8 max-w-sm mx-auto">
+            <div className="bg-dark-800/50 rounded-lg p-3 text-center">
+              <div className="text-lg font-bold text-gray-400">0</div>
+              <div className="text-xs text-dark-400">Actions</div>
+            </div>
+            <div className="bg-dark-800/50 rounded-lg p-3 text-center">
+              <div className="text-lg font-bold text-gray-400">0%</div>
+              <div className="text-xs text-dark-400">Success</div>
+            </div>
+            <div className="bg-dark-800/50 rounded-lg p-3 text-center">
+              <div className="text-lg font-bold text-gray-400">0</div>
+              <div className="text-xs text-dark-400">IQ Score</div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
   }
 
   const successRate = learningData.totalActions > 0
