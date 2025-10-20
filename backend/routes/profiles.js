@@ -5,10 +5,113 @@ const router = express.Router();
 const REGISTRY_ABI = require('../contracts/INSRegistry.json');
 const INFT_ABI = require('../contracts/INFT.json');
 
+// REAL 0G Storage configuration (OFFICIAL ENDPOINTS)
 const RPC_URL = process.env.RPC_URL || 'https://evmrpc-testnet.0g.ai';
+const INDEXER_RPC = process.env.INDEXER_RPC || 'https://indexer-storage-testnet-turbo.0g.ai';
 const REGISTRY_ADDRESS = process.env.REGISTRY_ADDRESS || '0xfDf463C23df9ac82D6946A34b9c8A8dDF23d44a3';
 
 const provider = new ethers.JsonRpcProvider(RPC_URL);
+
+// REAL 0G Storage Upload Endpoint
+router.post('/upload', async (req, res) => {
+  try {
+    const { data } = req.body;
+    
+    const { ZgFile, Indexer } = await import('@0glabs/0g-ts-sdk');
+
+    // Use PRIVATE_KEY as primary, fallback to ZEROG_PRIVATE_KEY and VITE_ZEROG_PRIVATE_KEY
+    const privateKey = process.env.PRIVATE_KEY || process.env.ZEROG_PRIVATE_KEY || process.env.VITE_ZEROG_PRIVATE_KEY;
+
+    if (!privateKey) {
+      return res.status(500).json({ error: 'Storage private key not configured' });
+    }
+
+    const signer = new ethers.Wallet(privateKey, provider);
+    const indexer = new Indexer(INDEXER_RPC);
+
+    const jsonData = JSON.stringify(data, null, 2);
+    const fileName = `traffic-${Date.now()}.json`;
+    const filePath = `/tmp/${fileName}`;
+
+    // Write to temp file
+    const { writeFileSync, unlinkSync } = await import('fs');
+    writeFileSync(filePath, jsonData);
+
+    const file = await ZgFile.fromFilePath(filePath);
+    const [tree, treeErr] = await file.merkleTree();
+
+    if (treeErr) {
+      await file.close();
+      unlinkSync(filePath);
+      return res.status(500).json({ error: `Merkle tree error: ${treeErr}` });
+    }
+
+    const [tx, uploadErr] = await indexer.upload(file, RPC_URL, signer);
+
+    if (uploadErr) {
+      await file.close();
+      unlinkSync(filePath);
+      return res.status(500).json({ error: `Upload error: ${uploadErr}` });
+    }
+
+    await file.close();
+    unlinkSync(filePath);
+
+    const result = {
+      rootHash: tree?.rootHash() || '',
+      txHash: tx || '',
+      timestamp: new Date().toISOString()
+    };
+
+    console.log('✅ Saved to 0G Storage:', result);
+    res.json(result);
+
+  } catch (error) {
+    console.error('Storage save failed:', error);
+    res.status(500).json({ error: error?.message || 'Storage save failed' });
+  }
+});
+
+// REAL 0G Storage Download Endpoint  
+router.get('/download/:rootHash', async (req, res) => {
+  try {
+    const { rootHash } = req.params;
+    const { Indexer } = await import('@0glabs/0g-ts-sdk');
+    
+    const indexer = new Indexer(INDEXER_RPC);
+    
+    // Download file via Indexer
+    const downloadPath = `/tmp/download-${Date.now()}.json`;
+    const downloadErr = await indexer.download(rootHash, downloadPath);
+    
+    if (downloadErr) {
+      return res.status(500).json({ error: `Download error: ${downloadErr}` });
+    }
+    
+    // Read and return file
+    const { readFileSync, unlinkSync } = await import('fs');
+    const data = readFileSync(downloadPath, 'utf8');
+    unlinkSync(downloadPath);
+    
+    res.json({ 
+      success: true, 
+      data: JSON.parse(data),
+      rootHash 
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Profile search placeholder route (placed before dynamic ':domain' route)
+router.get('/search', async (req, res) => {
+  res.status(501).json({
+    success: false,
+    error: 'Profile search not yet implemented',
+    message: 'This feature will be available in Sprint 2'
+  });
+});
 
 /**
  * GET /api/profile/:domain
@@ -156,17 +259,6 @@ router.get('/:domain/raw', async (req, res) => {
   }
 });
 
-/**
- * GET /api/profiles/search
- * Search profiles by skills, availability, etc.
- * TODO: Implement in future sprint
- */
-router.get('/search', async (req, res) => {
-  res.status(501).json({
-    success: false,
-    error: 'Profile search not yet implemented',
-    message: 'This feature will be available in Sprint 2'
-  });
-});
+/* Search route moved above to avoid shadowing by '/:domain' */
 
 module.exports = router;
