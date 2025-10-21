@@ -20,6 +20,9 @@ const MARKETPLACE_ABI = [
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'https://evmrpc-testnet.0g.ai');
 const marketplaceContract = new ethers.Contract(MARKETPLACE_ADDRESS, MARKETPLACE_ABI, provider);
 
+// Optional from-block override to widen event scan range
+const MARKETPLACE_FROM_BLOCK = parseInt(process.env.MARKETPLACE_FROM_BLOCK || '0');
+
 /**
  * GET /api/marketplace/listings
  * Get all active marketplace listings with filters and pagination
@@ -32,7 +35,8 @@ router.get('/listings', async (req, res) => {
 
     // We'll fetch from recent events as a temporary solution
     const currentBlock = await provider.getBlockNumber();
-    const fromBlock = Math.max(0, currentBlock - 10000); // Last ~10k blocks
+    const defaultWindow = Math.max(0, currentBlock - 100000); // widen scan window (~100k blocks)
+    const fromBlock = MARKETPLACE_FROM_BLOCK > 0 ? MARKETPLACE_FROM_BLOCK : defaultWindow;
 
     // Fetch sale listing events
     const saleFilter = marketplaceContract.filters.DomainListedForSale();
@@ -232,8 +236,9 @@ router.get('/listing/:domain', async (req, res) => {
   try {
     const { domain } = req.params;
 
-    // Compute node hash
-    const node = ethers.keccak256(ethers.toUtf8Bytes(domain));
+    // Compute node hash (normalize domain)
+    const cleanDomain = domain.replace('.0g', '').toLowerCase();
+    const node = ethers.keccak256(ethers.toUtf8Bytes(cleanDomain));
 
     // Fetch both sale and rental listings
     const saleListing = await marketplaceContract.saleListings(node);

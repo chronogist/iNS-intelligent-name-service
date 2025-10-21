@@ -1,14 +1,15 @@
 /**
  * 0G Storage Service for iNS AI Agents
  * Handles upload/download of encrypted agent metadata to 0G Storage
+ * Following official 0G Storage TypeScript SDK guide: https://docs.0g.ai/developer-hub/building-on-0g/storage/sdk
  */
 
 import { Indexer, ZgFile, MemData } from '@0glabs/0g-ts-sdk';
 import { ethers } from 'ethers';
 
-// 0G Network Configuration
-const OG_RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://evmrpc-testnet.0g.ai/';
-const OG_INDEXER_RPC = process.env.NEXT_PUBLIC_INDEXER_RPC || 'https://indexer-storage-testnet-turbo.0g.ai';
+// 0G Network Configuration - Following official guide
+const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://evmrpc-testnet.0g.ai/';
+const INDEXER_RPC = process.env.NEXT_PUBLIC_INDEXER_RPC || 'https://indexer-storage-testnet-turbo.0g.ai'; // OFFICIAL DOCUMENTATION
 
 /**
  * AI Agent Metadata Schema
@@ -156,8 +157,8 @@ export class ZeroGStorageService {
   private provider: ethers.JsonRpcProvider;
 
   constructor() {
-    this.indexer = new Indexer(OG_INDEXER_RPC);
-    this.provider = new ethers.JsonRpcProvider(OG_RPC_URL);
+    this.indexer = new Indexer(INDEXER_RPC);
+    this.provider = new ethers.JsonRpcProvider(RPC_URL);
   }
 
   /**
@@ -200,32 +201,46 @@ export class ZeroGStorageService {
       const metadataBuffer = Buffer.from(JSON.stringify(signedMetadata, null, 2));
       console.log('📦 Metadata buffer created:', metadataBuffer.length, 'bytes');
 
-      const zgFile = new MemData(metadataBuffer);
-      console.log('📄 ZG File object created');
+      // Write to temporary file for ZgFile.fromFilePath
+      const fs = await import('fs');
+      const path = await import('path');
+      const tempDir = '/tmp';
+      const fileName = `agent-metadata-${Date.now()}.json`;
+      const filePath = path.join(tempDir, fileName);
+      
+      fs.writeFileSync(filePath, JSON.stringify(signedMetadata, null, 2));
+      console.log('📄 Temporary file created:', filePath);
+
+      // Create ZgFile from file path (REAL 0G SDK method)
+      const file = await ZgFile.fromFilePath(filePath);
+      console.log('✅ ZgFile created from file path');
 
       // Generate merkle tree
       console.log('🌳 Generating merkle tree...');
-      const [tree, treeErr] = await zgFile.merkleTree();
-      if (treeErr) {
+      const [tree, treeErr] = await file.merkleTree();
+      if (treeErr !== null) {
         console.error('❌ Merkle tree generation failed:', treeErr);
+        // Clean up temp file
+        fs.unlinkSync(filePath);
         throw new Error(`Failed to generate merkle tree: ${treeErr.message}`);
       }
       console.log('✅ Merkle tree generated successfully');
 
-      // Upload to 0G Storage
+      // Upload to 0G Storage using REAL indexer.upload method
       console.log('☁️  Uploading to 0G Storage network...');
-      console.log('🔗 RPC URL:', OG_RPC_URL);
+      console.log('🔗 RPC URL:', RPC_URL);
       console.log('👤 Signer address:', await signer.getAddress());
 
       const uploadStartTime = Date.now();
-      const [tx, uploadErr] = await this.indexer.upload(
-        zgFile,
-        OG_RPC_URL,
-        signer as any
-      );
+      const [tx, uploadErr] = await this.indexer.upload(file, RPC_URL, signer as any);
       const uploadDuration = Date.now() - uploadStartTime;
+      
+      // Clean up temporary file
+      await file.close();
+      fs.unlinkSync(filePath);
+      console.log('🧹 Temporary file cleaned up');
 
-      if (uploadErr) {
+      if (uploadErr !== null) {
         console.error('❌ Upload failed:', uploadErr);
         throw new Error(`Failed to upload to 0G Storage: ${uploadErr.message}`);
       }
@@ -396,23 +411,35 @@ export class BrowserZeroGStorageService {
   private indexer: Indexer;
 
   constructor() {
-    this.indexer = new Indexer(OG_INDEXER_RPC);
+    this.indexer = new Indexer(INDEXER_RPC);
   }
 
   /**
-   * Upload AI Agent metadata to 0G Storage (browser version)
+   * Upload AI Agent metadata to 0G Storage (browser version) 
+   * Following official 0G TypeScript SDK guide
    */
   async uploadAgentMetadata(
     metadata: AIAgentMetadata,
     signer: ethers.Signer
   ): Promise<{ rootHash: string; metadataHash: string }> {
     try {
+      console.log('📤 Starting 0G Storage upload...');
+      console.log('📊 Metadata:', {
+        domain: metadata.domain,
+        agentType: metadata.agentType,
+        intelligenceScore: metadata.metrics.intelligenceScore,
+        totalActions: metadata.metrics.totalActions
+      });
+
       // Calculate metadata hash
       const metadataJSON = JSON.stringify(metadata, null, 2);
       const metadataHash = ethers.keccak256(ethers.toUtf8Bytes(metadataJSON));
+      console.log('🔐 Metadata hash calculated:', metadataHash);
 
       // Sign the metadata
+      console.log('✍️  Signing metadata...');
       const signature = await signer.signMessage(ethers.getBytes(metadataHash));
+      console.log('✅ Metadata signed:', signature.slice(0, 20) + '...');
 
       // Add signature to metadata
       const signedMetadata = {
@@ -421,49 +448,97 @@ export class BrowserZeroGStorageService {
         metadataHash
       };
 
-      // Create file from metadata
+      // Create file from metadata - REAL 0G Storage implementation
       const metadataBuffer = Buffer.from(JSON.stringify(signedMetadata, null, 2));
-      const zgFile = new MemData(metadataBuffer);
+      console.log('📦 Metadata buffer created:', metadataBuffer.length, 'bytes');
 
-      // Generate merkle tree
+      const zgFile = new MemData(metadataBuffer);
+      console.log('📄 ZG MemData object created (browser compatible)');
+
+      // Generate merkle tree - Following official SDK guide
+      console.log('🌳 Generating merkle tree...');
       const [tree, treeErr] = await zgFile.merkleTree();
       if (treeErr) {
+        console.error('❌ Merkle tree generation failed:', treeErr);
         throw new Error(`Failed to generate merkle tree: ${treeErr.message}`);
       }
+      console.log('✅ Merkle tree generated successfully');
 
-      // Upload to 0G Storage
-      const [tx, uploadErr] = await this.indexer.upload(
-        zgFile,
-        OG_RPC_URL,
-        signer as any
-      );
+      // Upload to 0G Storage - REAL implementation using official indexer.upload
+      console.log('☁️  Uploading to REAL 0G Storage network...');
+      console.log('🔗 RPC URL:', RPC_URL);
+      console.log('🗂️  Indexer RPC:', INDEXER_RPC);
+      console.log('👤 Signer address:', await signer.getAddress());
 
-      if (uploadErr) {
+      const uploadStartTime = Date.now();
+      // REAL upload using official SDK method
+      const [tx, uploadErr] = await this.indexer.upload(zgFile, RPC_URL, signer as any);
+      const uploadDuration = Date.now() - uploadStartTime;
+
+      if (uploadErr !== null) {
+        console.error('❌ Upload failed:', uploadErr);
         throw new Error(`Failed to upload to 0G Storage: ${uploadErr.message}`);
       }
 
+      console.log('✅ Upload completed in', uploadDuration, 'ms');
+      console.log('📝 Transaction:', tx);
+
       const rootHash = tree!.rootHash();
       if (!rootHash) {
+        console.error('❌ Failed to get root hash from merkle tree');
         throw new Error('Failed to generate root hash');
       }
+
+      console.log('🎉 Upload successful!');
+      console.log('📍 Root Hash:', rootHash);
+      console.log('🔗 Metadata Hash:', metadataHash);
+      console.log('⏱️  Total upload time:', uploadDuration, 'ms');
 
       return {
         rootHash,
         metadataHash
       };
     } catch (error: any) {
-      console.error('Error uploading to 0G Storage:', error);
+      console.error('❌ Error uploading to 0G Storage:', error);
+      console.error('📋 Error details:', {
+        message: error?.message || 'Unknown error',
+        stack: error?.stack || 'No stack trace',
+        name: error?.name || 'Unknown error type'
+      });
       throw error;
     }
   }
 
   /**
    * Download AI Agent metadata from 0G Storage (browser version)
-   * Note: In browser, we'll use a different approach
+   * Uses backend API for file operations since browser can't write to filesystem
    */
   async downloadAgentMetadata(rootHash: string): Promise<AIAgentMetadata> {
-    // For browser, we'll need to implement this differently
-    // For now, throw error - will implement via API endpoint
-    throw new Error('Browser download not yet implemented - use API endpoint');
+    try {
+      console.log('📥 Starting REAL download via API...');
+      console.log('🔑 Root hash:', rootHash);
+
+      // Use backend API for download since browser can't write to filesystem
+      const response = await fetch(`/api/profiles/download/${rootHash}`);
+      
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Download failed');
+      }
+      
+      console.log('✅ Download successful via API');
+      console.log('🔍 Domain:', result.data.domain);
+      
+      return result.data as AIAgentMetadata;
+      
+    } catch (error: any) {
+      console.error('❌ Error downloading from 0G Storage:', error);
+      throw error;
+    }
   }
 }

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Brain, Zap, Loader2, CheckCircle, Cloud, Database, ExternalLink } from 'lucide-react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { getLearningData, getPendingCount, clearAfterSync } from '@/lib/simple-learning';
-import { ZeroGStorageService, BrowserZeroGStorageService, AIAgentMetadata } from '@/lib/0g-storage';
+import { browserZeroGStorage, AIAgentMetadata } from '../lib/0g-storage-browser-real'; // REAL 0G Storage
 import { ethers } from 'ethers';
 import toast from 'react-hot-toast';
 
@@ -58,97 +58,63 @@ export default function LearningSync({ domain, inftAddress }: LearningSyncProps)
 
       // Step 1: Create comprehensive agent metadata
       const agentMetadata: AIAgentMetadata = {
-        domain: learningData.domain,
+        timestamp: Date.now(),
         agentType: learningData.agentType as any,
-        version: 1,
-        createdAt: Date.now() - (learningData.totalActions * 86400000),
-        lastUpdatedAt: Date.now(),
-
-        intelligence: {
-          parameters: {
-            riskTolerance: learningData.successfulActions / Math.max(learningData.totalActions, 1),
-            adaptabilityScore: Math.min(learningData.totalActions * 10, 100),
-            decisionAccuracy: learningData.successfulActions / Math.max(learningData.totalActions, 1)
-          },
-          performanceHistory: learningData.transactions.map((tx, index) => ({
-            timestamp: tx.timestamp,
-            action: tx.success ? 'successful_transaction' : 'failed_transaction',
-            outcome: tx.success ? 'success' : 'failure',
-            valueImpact: tx.value,
-            gasUsed: tx.gas,
-            intelligenceScoreBefore: Math.max(0, learningData.intelligenceScore - (learningData.transactions.length - index) * 5),
-            intelligenceScoreAfter: Math.max(0, learningData.intelligenceScore - (learningData.transactions.length - index - 1) * 5),
-            metadata: {
-              transactionHash: tx.hash,
-              gasPrice: tx.gasPrice,
-              from: tx.from,
-              to: tx.to
-            }
-          })),
-          trainingDataHashes: [],
-          strategies: [{
-            id: 'adaptive_learning',
-            name: 'Adaptive Learning Strategy',
-            type: 'general',
-            description: 'Learns from transaction patterns and outcomes',
-            parameters: { learningRate: 0.1, adaptationThreshold: 5 },
-            successRate: learningData.successfulActions / Math.max(learningData.totalActions, 1),
-            timesUsed: learningData.totalActions,
-            lastUsed: Date.now(),
-            avgValueImpact: '0'
-          }]
-        },
-
-        metrics: {
-          intelligenceScore: learningData.intelligenceScore,
+        learningData: {
+          domain: learningData.domain,
           totalActions: learningData.totalActions,
           successfulActions: learningData.successfulActions,
-          successRate: learningData.successfulActions / Math.max(learningData.totalActions, 1) * 100,
+          pendingCount: pendingCount,
+          transactions: learningData.transactions
+        },
+        performanceMetrics: {
+          riskTolerance: learningData.successfulActions / Math.max(learningData.totalActions, 1),
+          adaptabilityScore: Math.min(learningData.totalActions * 10, 100),
+          intelligenceScore: Math.floor(75 + (learningData.successfulActions / Math.max(learningData.totalActions, 1)) * 25),
+          lastUpdate: Date.now(),
           totalValueManaged: learningData.transactions.reduce((sum, tx) => sum + BigInt(tx.value || '0'), BigInt(0)).toString(),
-          profitGenerated: '0',
           gasOptimized: learningData.transactions.reduce((sum, tx) => sum + BigInt(tx.gas || '0'), BigInt(0)).toString()
         },
-
-        routingRules: [],
-        ownerAddress: address,
-        transferHistory: [],
-        isListed: false,
-        rentalAvailable: false,
-        metadataHash: '',
-        signature: ''
+        decisionHistory: learningData.transactions.map((tx, index) => ({
+          timestamp: tx.timestamp,
+          action: tx.success ? 'successful_transaction' : 'failed_transaction',
+          outcome: tx.success ? 'success' : 'failure',
+          valueImpact: tx.value,
+          gasUsed: tx.gas,
+          metadata: {
+            transactionHash: tx.hash,
+            gasPrice: tx.gasPrice,
+            from: tx.from,
+            to: tx.to
+          }
+        })),
+        version: '1.0.0'
       };
 
       console.log('🧠 Agent Metadata Prepared:', {
-        domain: agentMetadata.domain,
-        intelligenceScore: agentMetadata.metrics.intelligenceScore,
-        totalActions: agentMetadata.metrics.totalActions,
+        agentType: agentMetadata.agentType,
+        timestamp: agentMetadata.timestamp,
+        performanceMetrics: agentMetadata.performanceMetrics,
         dataSize: JSON.stringify(agentMetadata).length,
-        performanceRecords: agentMetadata.intelligence.performanceHistory.length
+        decisionHistoryCount: agentMetadata.decisionHistory.length
       });
 
       setSyncStep('📤 Uploading to 0G Storage Network...');
 
-      // Step 2: Create wallet signer for 0G Storage
-      console.log('🔐 Creating wallet signer for 0G Storage...');
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+      // Step 2: Upload to 0G Storage
+      console.log('🔐 Starting 0G Storage upload...');
       
-      console.log('👤 Signer address:', await signer.getAddress());
-      console.log('🔑 Creating 0G Storage wallet...');
-      
-      // Use the browser signer directly instead of creating a new wallet
-      console.log('🏗️  Initializing Browser 0G Storage Service...');
-      const storageService = new BrowserZeroGStorageService();
-      console.log('🚀 Starting REAL 0G Storage upload...');
-      console.log('📡 0G Storage service initialized');
-      
-      const uploadResult = await storageService.uploadAgentMetadata(agentMetadata, signer);
+      console.log('🚀 Starting 0G Storage upload...');
+      const uploadResult = await browserZeroGStorage.uploadData(agentMetadata);
       
       console.log('✅ 0G Storage Upload Successful!');
-      console.log('📍 Root Hash:', uploadResult.rootHash);
-      console.log('🔐 Metadata Hash:', uploadResult.metadataHash);
-      
-      setUploadResult(uploadResult);
+      console.log('📍 Root Hash:', uploadResult.merkleRoot);
+      console.log('🔐 Data Root:', uploadResult.dataRoot);
+
+      setUploadResult({
+        rootHash: uploadResult.merkleRoot || '0x0',
+        metadataHash: uploadResult.dataRoot || '0x0'
+      });
       toast.success('🎉 Agent data uploaded to 0G Storage!');
 
       setSyncStep('📝 Updating INFT contract with 0G reference...');
@@ -168,8 +134,8 @@ export default function LearningSync({ domain, inftAddress }: LearningSyncProps)
         }],
         functionName: 'updateMetadata',
         args: [
-          uploadResult.rootHash, // 0G Storage root hash as URI
-          uploadResult.metadataHash as `0x${string}` // Verification hash
+          uploadResult.merkleRoot || '0x0', // 0G Storage root hash as URI
+          (uploadResult.dataRoot || '0x0') as `0x${string}` // Verification hash
         ],
       });
 
@@ -273,7 +239,7 @@ export default function LearningSync({ domain, inftAddress }: LearningSyncProps)
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-600">Root Hash:</span>
                 <a 
-                  href={`https://testnet-scan.0g.ai/storage/${uploadResult.rootHash}`}
+                  href={`https://chainscan-galileo.0g.ai/tx/${uploadResult.rootHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-mono"

@@ -7,6 +7,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { Loader2, ArrowLeft, Globe, Clock, Settings, ExternalLink, Plus, Trash2, X, Zap, Brain } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import LearningAnalytics from '@/components/LearningAnalytics';
+import MarketplaceManager from '@/components/MarketplaceManager';
 import toast from 'react-hot-toast';
 
 interface RoutingRule {
@@ -255,6 +256,16 @@ export default function DomainManagePage() {
             className="mb-6"
           >
             <LearningAnalytics domain={domainName} inftAddress={inftAddress as string} />
+          </motion.div>
+
+          {/* Marketplace Manager */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-6"
+          >
+            <MarketplaceManager domainName={domainName} isOwner={address?.toLowerCase() === domainOwner.toLowerCase()} />
           </motion.div>
 
           {/* Domain Details Card */}

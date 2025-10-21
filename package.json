@@ -4,14 +4,15 @@
   "description": "iNS (Intelligent Naming Service) Smart Contracts",
   "main": "index.js",
   "scripts": {
-    "compile": "hardhat compile",
-    "test": "hardhat test",
-    "deploy:testnet": "hardhat run scripts/deploy.js --network ogTestnet",
-    "deploy:mainnet": "hardhat run scripts/deploy.js --network ogMainnet",
-    "verify": "hardhat verify --network ogMainnet",
-    "coverage": "hardhat coverage",
-    "clean": "hardhat clean",
-    "format": "prettier --write 'contracts/**/*.sol' 'test/**/*.js' 'scripts/**/*.js'"
+    "compile": "hardhat compile --config hardhat.config.cjs",
+    "test": "hardhat test --config hardhat.config.cjs",
+    "deploy:testnet": "hardhat run scripts/deploy.cjs --network ogTestnet --config hardhat.config.cjs",
+    "deploy:mainnet": "hardhat run scripts/deploy.cjs --network ogMainnet --config hardhat.config.cjs",
+    "deploy:marketplace": "hardhat run scripts/deploy-marketplace.cjs --network ogTestnet --config hardhat.config.cjs",
+    "verify": "hardhat verify --network ogMainnet --config hardhat.config.cjs",
+    "coverage": "hardhat coverage --config hardhat.config.cjs",
+    "clean": "hardhat clean --config hardhat.config.cjs",
+    "format": "prettier --write 'contracts/**/*.sol' 'test/**/*.cjs' 'scripts/**/*.cjs'"
   },
   "keywords": [
     "blockchain",
@@ -44,6 +45,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@next/swc-darwin-arm64": "^15.5.6",
     "@openzeppelin/contracts": "^5.0.1",
     "@openzeppelin/contracts-upgradeable": "^5.0.1",
     "@openzeppelin/upgrades-core": "^1.44.1",

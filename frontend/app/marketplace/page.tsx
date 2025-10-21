@@ -1,18 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Loader2, Zap, TrendingUp, Star, Brain, Activity,
   Filter, Search, ArrowUpDown, ShoppingCart, Eye, Award
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { useAccount, useReadContract } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useUserListings, useMarketplaceStats } from '@/hooks/useMarketplace';
+import { formatPrice } from '@/lib/domain-utils';
 
 interface ListedAgent {
   domain: string;
+  node: string;
   agentType: string;
   intelligenceScore: number;
   totalActions: number;
@@ -48,7 +51,7 @@ const agentTypeColors: Record<string, string> = {
 };
 
 export default function MarketplacePage() {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [agents, setAgents] = useState<ListedAgent[]>([]);
@@ -57,82 +60,37 @@ export default function MarketplacePage() {
   const [selectedType, setSelectedType] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'intelligence' | 'price' | 'performance'>('intelligence');
 
-  // Mock data for now - will be replaced with actual contract calls
+  // Fetch marketplace stats
+  const { data: marketplaceStats } = useMarketplaceStats();
+
+  // Fetch all listings - we'll need to implement a function to get all listed domains
+  // For now, we'll fetch from the backend API which should index marketplace events
   useEffect(() => {
-    // Simulate loading agents from contracts
-    setTimeout(() => {
-      const mockAgents: ListedAgent[] = [
-        {
-          domain: 'defi-master',
-          agentType: 'defi_trader',
-          intelligenceScore: 847,
-          totalActions: 1250,
-          successRate: 89.2,
-          price: '2.5',
-          owner: '0x1234...5678',
-          inftAddress: '0xabcd...efgh',
-          isRental: false,
-          performance: {
-            totalValueManaged: '125000000000000000000',
-            profitGenerated: '15000000000000000000',
-            gasOptimized: '2500000000000000000'
-          }
-        },
-        {
-          domain: 'gas-saver-pro',
-          agentType: 'gas_optimizer',
-          intelligenceScore: 923,
-          totalActions: 2100,
-          successRate: 95.8,
-          price: '1.8',
-          owner: '0x2345...6789',
-          inftAddress: '0xbcde...fghi',
-          isRental: true,
-          rentalPricePerDay: '0.05',
-          performance: {
-            totalValueManaged: '80000000000000000000',
-            profitGenerated: '8000000000000000000',
-            gasOptimized: '12000000000000000000'
-          }
-        },
-        {
-          domain: 'yield-hunter',
-          agentType: 'yield_farmer',
-          intelligenceScore: 756,
-          totalActions: 890,
-          successRate: 82.4,
-          price: '3.2',
-          owner: '0x3456...7890',
-          inftAddress: '0xcdef...ghij',
-          isRental: false,
-          performance: {
-            totalValueManaged: '200000000000000000000',
-            profitGenerated: '22000000000000000000',
-            gasOptimized: '1800000000000000000'
-          }
-        },
-        {
-          domain: 'arb-genius',
-          agentType: 'arbitrage_bot',
-          intelligenceScore: 891,
-          totalActions: 1680,
-          successRate: 91.5,
-          price: '4.5',
-          owner: '0x4567...8901',
-          inftAddress: '0xdefg...hijk',
-          isRental: true,
-          rentalPricePerDay: '0.1',
-          performance: {
-            totalValueManaged: '95000000000000000000',
-            profitGenerated: '18000000000000000000',
-            gasOptimized: '3200000000000000000'
-          }
-        },
-      ];
-      setAgents(mockAgents);
-      setFilteredAgents(mockAgents);
-      setIsLoading(false);
-    }, 1000);
+    async function fetchListings() {
+      try {
+        setIsLoading(true);
+
+        // Fetch from your backend API that indexes marketplace events
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/marketplace/listings`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch listings');
+        }
+
+        const data = await response.json();
+        setAgents(data.listings || []);
+        setFilteredAgents(data.listings || []);
+      } catch (error) {
+        console.error('Error fetching marketplace listings:', error);
+        // For now, show empty state
+        setAgents([]);
+        setFilteredAgents([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchListings();
   }, []);
 
   // Filter and sort agents
@@ -176,6 +134,25 @@ export default function MarketplacePage() {
     return { label: 'Beginner', color: 'text-gray-400' };
   };
 
+  // Calculate stats from marketplace
+  const stats = useMemo(() => {
+    const totalSales = marketplaceStats ? Number((marketplaceStats as any)[0]) : 0;
+    const totalVolume = marketplaceStats ? Number((marketplaceStats as any)[1]) / 1e18 : 0;
+    const totalRentals = marketplaceStats ? Number((marketplaceStats as any)[2]) : 0;
+
+    return {
+      totalAgents: agents.length,
+      avgIntelligence: agents.length > 0
+        ? Math.floor(agents.reduce((acc, a) => acc + a.intelligenceScore, 0) / agents.length)
+        : 0,
+      forSale: agents.filter(a => !a.isRental).length,
+      forRent: agents.filter(a => a.isRental).length,
+      totalSales,
+      totalVolume,
+      totalRentals,
+    };
+  }, [agents, marketplaceStats]);
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -207,10 +184,10 @@ export default function MarketplacePage() {
             className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
           >
             {[
-              { label: 'Total Agents', value: agents.length, icon: Brain },
-              { label: 'Avg Intelligence', value: Math.floor(agents.reduce((acc, a) => acc + a.intelligenceScore, 0) / agents.length || 0), icon: Zap },
-              { label: 'For Sale', value: agents.filter(a => !a.isRental).length, icon: ShoppingCart },
-              { label: 'For Rent', value: agents.filter(a => a.isRental).length, icon: Activity },
+              { label: 'Total Agents', value: stats.totalAgents, icon: Brain },
+              { label: 'Avg Intelligence', value: stats.avgIntelligence, icon: Zap },
+              { label: 'For Sale', value: stats.forSale, icon: ShoppingCart },
+              { label: 'For Rent', value: stats.forRent, icon: Activity },
             ].map((stat, i) => (
               <div key={i} className="glass-card p-4 text-center">
                 <stat.icon className="w-6 h-6 text-primary-400 mx-auto mb-2" />
@@ -273,8 +250,20 @@ export default function MarketplacePage() {
           ) : filteredAgents.length === 0 ? (
             <div className="glass-card p-12 text-center">
               <Brain className="w-16 h-16 text-dark-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">No Agents Found</h2>
-              <p className="text-dark-400">Try adjusting your filters or search query</p>
+              <h2 className="text-2xl font-bold mb-2">No Agents Listed Yet</h2>
+              <p className="text-dark-400 mb-6">
+                {agents.length === 0
+                  ? "Be the first to list your intelligent domain on the marketplace!"
+                  : "Try adjusting your filters or search query"}
+              </p>
+              {isConnected && (
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="btn-primary"
+                >
+                  List Your Domain
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -8,7 +8,9 @@ import {
 } from 'lucide-react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { getLearningData, getPendingCount, clearAfterSync, initLearningData } from '@/lib/simple-learning';
+import { browserZeroGStorage, AIAgentMetadata } from '../lib/0g-storage-browser-real'; // REAL 0G Storage
 import { syncFromBlockchain } from '@/lib/blockchain-sync';
+import { ethers } from 'ethers';
 import toast from 'react-hot-toast';
 
 interface LearningAnalyticsProps {
@@ -53,28 +55,55 @@ export default function LearningAnalytics({ domain, inftAddress }: LearningAnaly
     try {
       setIsSyncing(true);
 
+      // Step 1: Upload to 0G Storage first
+      console.log('🔄 Starting full sync process with 0G Storage...');
+      
+      // Create comprehensive agent metadata
+            const agentMetadata: AIAgentMetadata = {
+        timestamp: Date.now(),
+        agentType: 'INS-Learning-Agent',
+        learningData: learningData,
+        performanceMetrics: {
+          domainsLearned: learningData.domain ? 1 : 0,
+          lastUpdate: Date.now(),
+          success: true
+        },
+        decisionHistory: [],
+        version: '1.0.0'
+      };
+
+      // Upload to 0G Storage
+      console.log('📤 Uploading to 0G Storage...');
+      
+      const uploadResult = await browserZeroGStorage.uploadData(agentMetadata);
+      console.log('✅ 0G Storage Upload Successful!');
+      console.log('📍 Root Hash:', uploadResult.merkleRoot);
+
+      // Step 2: Update INFT contract with 0G Storage reference
       writeContract({
         address: inftAddress as `0x${string}`,
         abi: [{
-          name: 'recordAction',
+          name: 'updateMetadata',
           type: 'function',
           stateMutability: 'nonpayable',
           inputs: [
-            { name: '_success', type: 'bool' },
-            { name: '_newIntelligenceScore', type: 'uint256' }
+            { name: '_newURI', type: 'string' },
+            { name: '_newHash', type: 'bytes32' }
           ],
           outputs: []
         }],
-        functionName: 'recordAction',
+        functionName: 'updateMetadata',
         args: [
-          learningData.successfulActions > 0,
-          BigInt(learningData.intelligenceScore)
+          uploadResult.merkleRoot || '0x0', // 0G Storage root hash as URI
+          (uploadResult.dataRoot || '0x0') as `0x${string}` // Verification hash
         ],
       });
 
+      toast.success('🎉 Data uploaded to 0G Storage!');
+
     } catch (error: any) {
       console.error('Sync error:', error);
-      toast.error(error.message || 'Failed to sync');
+      toast.error(error.message || 'Failed to sync to 0G Storage');
       setIsSyncing(false);
     }
   };
@@ -211,7 +240,7 @@ export default function LearningAnalytics({ domain, inftAddress }: LearningAnaly
             ) : (
               <>
                 <Zap className="w-4 h-4" />
-                Sync to Chain
+                Sync to 0G Storage
               </>
             )}
           </button>

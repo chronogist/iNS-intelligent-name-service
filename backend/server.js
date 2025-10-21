@@ -4,11 +4,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const { body, query, validationResult } = require('express-validator');
-// Load env from backend .env and fallback to project root .env
-const dotenv = require('dotenv');
-const path = require('path');
-dotenv.config();
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+require('dotenv').config();
 
 const blockchain = require('./config/blockchain');
 const profileRoutes = require('./routes/profiles');
@@ -297,70 +293,6 @@ app.get('/api/info', async (req, res) => {
   }
 });
 
-// Resolve domain to core info
-app.get('/api/resolve/:domain', async (req, res) => {
-  try {
-    const { domain } = req.params;
-    const cleanDomain = domain.replace('.0g', '').toLowerCase();
-
-    const info = await blockchain.getDomainInfo(cleanDomain);
-    const { ethers } = require('ethers');
-
-    if (!info || info.inftAddress === ethers.ZeroAddress) {
-      return res.status(404).json({ success: false, error: 'Domain not found' });
-    }
-
-    const node = ethers.keccak256(ethers.toUtf8Bytes(cleanDomain));
-
-    res.json({
-      success: true,
-      data: {
-        domain: `${cleanDomain}.0g`,
-        node,
-        owner: info.owner,
-        inftAddress: info.inftAddress,
-        resolvedAddress: info.resolvedAddress,
-        expiry: info.expiry,
-        expiryDate: info.expiryDate
-      }
-    });
-  } catch (error) {
-    console.error('Error resolving domain:', error);
-    res.status(500).json({ success: false, error: 'Failed to resolve domain' });
-  }
-});
-
-// Indexer status endpoint
-app.get('/api/indexer/status', async (req, res) => {
-  try {
-    const provider = blockchain.getProvider();
-    const currentBlock = await provider.getBlockNumber();
-    const registryAddress = blockchain.getRegistryAddress();
-    const marketplaceAddress = process.env.MARKETPLACE_ADDRESS || null;
-
-    res.json({
-      success: true,
-      currentBlock,
-      chainHead: currentBlock,
-      lag: 0,
-      lastSyncAt: new Date().toISOString(),
-      healthy: !!provider && !!registryAddress && !!marketplaceAddress,
-      components: {
-        rpc: 'ok',
-        registry: registryAddress ? 'ok' : 'missing',
-        marketplace: marketplaceAddress ? 'ok' : 'missing'
-      }
-    });
-  } catch (error) {
-    console.error('Error getting indexer status:', error);
-    res.status(503).json({
-      success: false,
-      error: 'Indexer unavailable',
-      details: error.message
-    });
-  }
-});
-
 
 // 404 handler
 app.use((req, res) => {
@@ -400,7 +332,6 @@ app.use('*', (req, res) => {
       'GET /health',
       'GET /api/health',
       'GET /api/info',
-      'GET /api/indexer/status',
       'GET /api/domains/available/:name',
       'GET /api/domains/price/:name',
       'GET /api/profile/:domain',
@@ -410,7 +341,6 @@ app.use('*', (req, res) => {
       'GET /api/marketplace/listings',
       'GET /api/marketplace/stats',
       'GET /api/marketplace/listing/:domain',
-      'GET /api/resolve/:domain',
       'GET /api/resolve/address/:address',
       'POST /api/resolve/addresses'
     ]

@@ -33,6 +33,7 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/domains', label: 'My Domains' },
+    { href: '/portfolio', label: 'Portfolio' },
     { href: '/marketplace', label: 'Marketplace' },
     { href: '/explore', label: 'Explore' },
   ];
