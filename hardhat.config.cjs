@@ -33,7 +33,7 @@ module.exports = {
     },
     ogMainnet: {
       url: OG_MAINNET_RPC,
-      chainId: 16602,
+      chainId: 16661,
       accounts: [PRIVATE_KEY],
       gasPrice: "auto",
     },
@@ -60,10 +60,10 @@ module.exports = {
       },
       {
         network: "ogMainnet",
-        chainId: 16602,
+        chainId: 16661,
         urls: {
-          apiURL: "https://chainscan-galileo.0g.ai/api",
-          browserURL: "https://chainscan-galileo.0g.ai",
+          apiURL: "https://chainscan.0g.ai/api",
+          browserURL: "https://chainscan.0g.ai",
         },
       },
     ],
