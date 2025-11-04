@@ -1,5 +1,5 @@
 // Test page for downloading files from 0G Storage
-// Visit this page to test downloading with your root hash
+// Now uses backend API endpoints for 0G Storage operations
 
 import DownloadTest from '../../../components/DownloadTest';
 
@@ -20,7 +20,7 @@ export default function TestDownloadPage() {
 
         <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">How It Works</h2>
-          
+
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <h3 className="font-semibold text-gray-800 mb-2">🔍 File Query Process</h3>
@@ -31,7 +31,7 @@ export default function TestDownloadPage() {
                 <li>4. Returns file metadata</li>
               </ol>
             </div>
-            
+
             <div>
               <h3 className="font-semibold text-gray-800 mb-2">📥 Download Process</h3>
               <ol className="text-sm text-gray-600 space-y-1">
@@ -46,10 +46,10 @@ export default function TestDownloadPage() {
           <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <h3 className="font-semibold text-yellow-800 mb-2">⚠️ Important Notes</h3>
             <ul className="text-sm text-yellow-700 space-y-1">
-              <li>• This is a browser-compatible implementation</li>
+              <li>• Uses backend API for 0G Storage operations</li>
               <li>• Full download requires the file to have been uploaded first</li>
               <li>• Check browser console for detailed operation logs</li>
-              <li>• Some operations may be simulated due to browser limitations</li>
+              <li>• Backend must be running for this to work</li>
             </ul>
           </div>
         </div>

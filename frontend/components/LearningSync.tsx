@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Brain, Zap, Loader2, CheckCircle, Cloud, Database, ExternalLink } from 'lucide-react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { getLearningData, getPendingCount, clearAfterSync } from '@/lib/simple-learning';
-import { browserZeroGStorage, AIAgentMetadata } from '../lib/0g-storage-browser-real'; // REAL 0G Storage
+import { browserZeroGStorage, LegacyAIAgentMetadata } from '../lib/0g-storage-browser'; // REAL 0G Storage
 import { ethers } from 'ethers';
 import toast from 'react-hot-toast';
 
@@ -57,7 +57,7 @@ export default function LearningSync({ domain, inftAddress }: LearningSyncProps)
       console.log('🔧 Step 1: Preparing agent metadata...');
 
       // Step 1: Create comprehensive agent metadata
-      const agentMetadata: AIAgentMetadata = {
+      const agentMetadata: LegacyAIAgentMetadata = {
         timestamp: Date.now(),
         agentType: learningData.agentType as any,
         learningData: {

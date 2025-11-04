@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { Download, Loader2, FileText, AlertCircle } from 'lucide-react';
-import { browserZeroGStorage } from '../lib/0g-storage-browser-real';
+import { browserZeroGStorage } from '../lib/0g-storage-browser';
 
 interface DownloadResult {
   success: boolean;

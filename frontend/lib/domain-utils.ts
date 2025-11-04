@@ -2,13 +2,19 @@ import { keccak256, toHex } from 'viem';
 
 /**
  * Computes the namehash (node) for a domain name
- * @param name - The domain name (e.g., "alice" or "alice.0g")
+ * @param name - The domain name (e.g., "alice")
  * @returns The namehash as a bytes32 hex string
  */
 export function computeNode(name: string): `0x${string}` {
-  // Normalize: strip TLD and lowercase to match backend/contract expectations
-  const normalized = name.replace(/\.?0g$/i, '').toLowerCase();
-  return keccak256(toHex(normalized));
+  // For top-level domains in INS, we just hash the name
+  // If we had subdomains, we'd need to recursively compute the hash
+  const label = keccak256(toHex(name));
+
+  // For root domains, the node is just the keccak256 of the label
+  // In a full ENS-style implementation, you'd compute:
+  // node = keccak256(parentNode + labelHash)
+  // But for simplicity with top-level domains:
+  return label;
 }
 
 /**

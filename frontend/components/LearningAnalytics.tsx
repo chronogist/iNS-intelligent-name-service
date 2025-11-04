@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { getLearningData, getPendingCount, clearAfterSync, initLearningData } from '@/lib/simple-learning';
-import { browserZeroGStorage, AIAgentMetadata } from '../lib/0g-storage-browser-real'; // REAL 0G Storage
+import { browserZeroGStorage, LegacyAIAgentMetadata } from '../lib/0g-storage-browser'; // REAL 0G Storage
 import { syncFromBlockchain } from '@/lib/blockchain-sync';
 import { ethers } from 'ethers';
 import toast from 'react-hot-toast';
@@ -59,18 +59,18 @@ export default function LearningAnalytics({ domain, inftAddress }: LearningAnaly
       console.log('🔄 Starting full sync process with 0G Storage...');
       
       // Create comprehensive agent metadata
-            const agentMetadata: AIAgentMetadata = {
-        timestamp: Date.now(),
-        agentType: 'INS-Learning-Agent',
-        learningData: learningData,
-        performanceMetrics: {
-          domainsLearned: learningData.domain ? 1 : 0,
-          lastUpdate: Date.now(),
-          success: true
-        },
-        decisionHistory: [],
-        version: '1.0.0'
-      };
+            const agentMetadata: LegacyAIAgentMetadata = {
+              timestamp: Date.now(),
+              agentType: 'INS-Learning-Agent',
+              learningData: learningData,
+              performanceMetrics: {
+                domainsLearned: learningData.domain ? 1 : 0,
+                lastUpdate: Date.now(),
+                success: true
+              },
+              decisionHistory: [],
+              version: '1.0.0'
+            };
 
       // Upload to 0G Storage
       console.log('📤 Uploading to 0G Storage...');

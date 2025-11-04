@@ -5,7 +5,7 @@ const nextConfig = {
   reactStrictMode: true,
   webpack: (config, { isServer }) => {
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
-    
+
     // Add Node.js polyfills for browser
     if (!isServer) {
       config.resolve.fallback = {
@@ -13,8 +13,12 @@ const nextConfig = {
         '@react-native-async-storage/async-storage': false,
         'fs': false,
         'fs/promises': false,
+        'node:fs': false,
         'node:fs/promises': false,
         'node:crypto': false,
+        'node:path': false,
+        'node:buffer': false,
+        'node:util': false,
         'crypto': require.resolve('crypto-browserify'),
         'stream': require.resolve('stream-browserify'),
         'buffer': require.resolve('buffer'),

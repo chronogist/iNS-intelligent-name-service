@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 import { Loader2, ArrowLeft, Globe, Clock, Settings, ExternalLink, Plus, Trash2, X, Zap, Brain } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import LearningAnalytics from '@/components/LearningAnalytics';

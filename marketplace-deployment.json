@@ -1,12 +1,12 @@
 {
   "network": "ogTestnet",
   "marketplace": {
-    "proxy": "0xf20C0fB3D11BF0c9C8de177eC7886b868a248344",
-    "implementation": "0x0d0F1E2674d2B50FEDFA2475d6ed8a714355B307"
+    "proxy": "0xA48d1AC027669099B75CDbF5A8e99D1dcC1Ee0dC",
+    "implementation": "0x7B666D91b9782e78B724799adD625942e4020b0f"
   },
-  "registry": "0x507d8324A029f87BdFFF2025215AABBA0326a7bd",
-  "treasury": "0x55FfDb42694Eca4B1dBB23a57Ffd40E2C26450c9",
+  "registry": "0x33ba0a6756007FC8BE7F3fe6a588932170c352eb",
+  "treasury": "0x279aA0C8D96bD42294dC49E433d404dAEFb2Fa7A",
   "platformFee": 250,
-  "deployer": "0xd32B97733d6A8d3c35fD22B096F4c8A8e6072ed0",
-  "timestamp": "2025-10-20T09:52:34.068Z"
+  "deployer": "0x279aA0C8D96bD42294dC49E433d404dAEFb2Fa7A",
+  "timestamp": "2025-11-04T08:17:30.367Z"
 }

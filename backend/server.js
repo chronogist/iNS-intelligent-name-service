@@ -352,8 +352,11 @@ async function startServer() {
   try {
     console.log('🚀 Starting iNS Backend Server...\n');
 
-    // Initialize services
-    await blockchain.initialize();
+    // Initialize services in the background (non-blocking)
+    // Blockchain will initialize on first use
+    blockchain.initialize().catch(err => {
+      console.warn('⚠️  Blockchain initialization deferred to first use:', err.message);
+    });
 
     // Start Express server
     app.listen(PORT, () => {

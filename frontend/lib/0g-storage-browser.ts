@@ -44,6 +44,19 @@ export interface AIAgentMetadata {
   signature: string;
 }
 
+/**
+ * Legacy simplified metadata used by older components (for smooth migration)
+ */
+export interface LegacyAIAgentMetadata {
+  timestamp: number;
+  agentType: string;
+  learningData: Record<string, any>;
+  performanceMetrics: Record<string, any>;
+  decisionHistory: Array<Record<string, any>>;
+  version: string;
+  contextHash?: string;
+}
+
 export interface PerformanceRecord {
   timestamp: number;
   action: string;
@@ -87,30 +100,25 @@ export interface TransferRecord {
 }
 
 /**
- * Browser-only 0G Storage Service
- * Uses dynamic imports to avoid SSR issues
+ * Browser 0G Storage Service
+ * Calls backend API endpoints which handle 0G SDK operations server-side
  */
 export class BrowserZeroGStorageService {
-  private indexer: any = null;
-  private initialized = false;
+  private apiUrl: string;
+  private initialized = true; // No initialization needed, API is always available
+
+  constructor(apiUrl: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') {
+    this.apiUrl = apiUrl;
+    console.log('🏗️ 0G Storage service initialized (using backend API)');
+  }
 
   async init() {
-    if (this.initialized) return;
-    
-    try {
-      // Dynamic import to avoid SSR issues
-      const { Indexer } = await import('@0glabs/0g-ts-sdk');
-      this.indexer = new Indexer(INDEXER_RPC);
-      this.initialized = true;
-      console.log('🏗️ 0G Storage service initialized successfully');
-    } catch (error) {
-      console.error('❌ Failed to initialize 0G Storage service:', error);
-      throw new Error('Failed to initialize 0G Storage service');
-    }
+    // No-op for compatibility - backend is always ready
+    return;
   }
 
   /**
-   * Upload AI Agent metadata to 0G Storage (browser version)
+   * Upload AI Agent metadata to 0G Storage via backend API
    */
   async uploadAgentMetadata(
     metadata: AIAgentMetadata,
@@ -118,7 +126,7 @@ export class BrowserZeroGStorageService {
   ): Promise<{ rootHash: string; metadataHash: string }> {
     try {
       await this.init();
-      
+
       console.log('📤 Starting 0G Storage upload...');
       console.log('📊 Metadata:', {
         domain: metadata.domain,
@@ -144,53 +152,35 @@ export class BrowserZeroGStorageService {
         metadataHash
       };
 
-      // Create file from metadata using dynamic import
-      console.log('📦 Creating metadata buffer...');
-      const { MemData } = await import('@0glabs/0g-ts-sdk');
-      
-      const metadataBuffer = Buffer.from(JSON.stringify(signedMetadata, null, 2));
-      console.log('📦 Metadata buffer created:', metadataBuffer.length, 'bytes');
+      // Upload via backend API
+      console.log('☁️  Uploading to 0G Storage network via backend...');
+      const response = await fetch(`${this.apiUrl}/api/profile/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: signedMetadata }),
+      });
 
-      const zgFile = new MemData(metadataBuffer);
-      console.log('📄 ZG File object created');
-
-      // Generate merkle tree
-      console.log('🌳 Generating merkle tree...');
-      const [tree, treeErr] = await zgFile.merkleTree();
-      if (treeErr) {
-        console.error('❌ Merkle tree generation failed:', treeErr);
-        throw new Error(`Failed to generate merkle tree: ${treeErr.message}`);
-      }
-      console.log('✅ Merkle tree generated successfully');
-
-      // Upload to 0G Storage
-      console.log('☁️  Uploading to 0G Storage network...');
-      console.log('🔗 RPC URL:', RPC_URL);
-      console.log('🗂️  Indexer RPC:', INDEXER_RPC);
-      console.log('👤 Signer address:', await signer.getAddress());
-
-      const uploadStartTime = Date.now();
-      const [tx, uploadErr] = await this.indexer.upload(zgFile, RPC_URL, signer as any);
-      const uploadDuration = Date.now() - uploadStartTime;
-
-      if (uploadErr !== null) {
-        console.error('❌ Upload failed:', uploadErr);
-        throw new Error(`Failed to upload to 0G Storage: ${uploadErr.message}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
       }
 
-      console.log('✅ Upload completed in', uploadDuration, 'ms');
-      console.log('📝 Transaction:', tx);
+      const result = await response.json();
 
-      const rootHash = tree!.rootHash();
+      console.log('✅ Upload completed successfully');
+      console.log('📝 Transaction:', result.txHash);
+
+      const rootHash = result.rootHash;
       if (!rootHash) {
-        console.error('❌ Failed to get root hash from merkle tree');
-        throw new Error('Failed to generate root hash');
+        console.error('❌ Failed to get root hash from upload');
+        throw new Error('Failed to get root hash');
       }
 
       console.log('🎉 Upload successful!');
       console.log('📍 Root Hash:', rootHash);
       console.log('🔗 Metadata Hash:', metadataHash);
-      console.log('⏱️  Total upload time:', uploadDuration, 'ms');
 
       return {
         rootHash,
@@ -212,6 +202,109 @@ export class BrowserZeroGStorageService {
    */
   async downloadAgentMetadata(rootHash: string): Promise<AIAgentMetadata> {
     throw new Error('Browser download not yet implemented - use API endpoint');
+  }
+
+  /**
+   * Upload data to 0G Storage via backend API
+   */
+  async uploadData(
+    data: LegacyAIAgentMetadata
+  ): Promise<{ success: boolean; merkleRoot?: string; dataRoot?: string; error?: string }> {
+    try {
+      console.log('📤 Uploading to 0G Storage via backend API...');
+
+      const response = await fetch(`${this.apiUrl}/api/profile/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const result = await response.json();
+
+      console.log('✅ Upload successful:', result);
+
+      // Calculate metadata hash for verification
+      const metadataJSON = JSON.stringify(data, null, 2);
+      const metadataHash = ethers.keccak256(ethers.toUtf8Bytes(metadataJSON));
+
+      return {
+        success: true,
+        merkleRoot: result.rootHash,
+        dataRoot: metadataHash
+      };
+    } catch (err: any) {
+      console.error('❌ Upload error:', err);
+      return { success: false, error: err?.message || 'Unknown error' };
+    }
+  }
+
+  /**
+   * Compatibility wrapper: lightweight file info by root hash
+   * Note: Detailed size/status may require backend or future SDK calls.
+   */
+  async getFileInfo(rootHash: string): Promise<{
+    merkleRoot: string;
+    size?: string;
+    nodeUrl: string;
+    status: string;
+    timestamp: number;
+  }> {
+    await this.init();
+    return {
+      merkleRoot: rootHash,
+      size: 'Unknown',
+      nodeUrl: INDEXER_RPC,
+      status: 'Unknown',
+      timestamp: Date.now()
+    };
+  }
+
+  /**
+   * Download data from 0G Storage via backend API
+   */
+  async downloadData(rootHash: string): Promise<{
+    success: boolean;
+    merkleRoot: string;
+    nodeUrl: string;
+    data?: any;
+    message?: string;
+  }> {
+    try {
+      console.log('📥 Downloading from 0G Storage via backend API...');
+
+      const response = await fetch(`${this.apiUrl}/api/profile/download/${rootHash}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Download failed');
+      }
+
+      const data = await response.json();
+
+      console.log('✅ Download successful');
+
+      return {
+        success: true,
+        merkleRoot: rootHash,
+        nodeUrl: INDEXER_RPC,
+        data: data
+      };
+    } catch (err: any) {
+      console.error('❌ Download error:', err);
+      return {
+        success: false,
+        merkleRoot: rootHash,
+        nodeUrl: INDEXER_RPC,
+        message: err?.message || 'Download failed'
+      };
+    }
   }
 }
 
@@ -253,3 +346,8 @@ export function calculateIntelligenceScore(metadata: AIAgentMetadata): number {
 
   return Math.floor(successScore + experienceScore + valueScore + profitScore + gasScore);
 }
+
+// Export a singleton for existing imports
+export const browserZeroGStorage = new BrowserZeroGStorageService(
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+);
